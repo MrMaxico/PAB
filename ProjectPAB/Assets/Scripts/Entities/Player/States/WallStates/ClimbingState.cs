@@ -22,6 +22,8 @@ namespace Entities.Player.States
             Ctx.Rigidbody.useGravity = false;
             Ctx.Rigidbody.linearVelocity = Vector3.zero;
             Ctx.JumpDirection = Vector3.up * 1.2f;
+
+            Ctx.WallDetector.Tick();
         }
 
         public override void ExitState(PlayerBaseState nextState)
@@ -44,9 +46,9 @@ namespace Entities.Player.States
                 TrySwitchState(PlayerStates.WallClinging);
             }
 
-            if (!Ctx.WallDetector.IsHit(FrontExtra))
+            if (Factory.HasState(PlayerStates.ClimbUp))
             {
-                if (Factory.HasState(PlayerStates.ClimbUp))
+                if (!Ctx.WallDetector.IsHit(FrontExtra))
                 {
                     TrySwitchState(PlayerStates.ClimbUp);
                 }

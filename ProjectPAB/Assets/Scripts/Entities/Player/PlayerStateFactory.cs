@@ -66,6 +66,7 @@ namespace Entities.Player
             RegisterState(PlayerStates.WallWalking, new WallWalkingState(_context, this));
             RegisterState(PlayerStates.WallClinging, new WallClingingState(_context, this));
             RegisterState(PlayerStates.WallLunging, new WallLungingState(_context, this));
+            RegisterState(PlayerStates.ClimbUp, new ClimbUpState(_context, this));
 
             // --- Camera Context States ---
             RegisterState(PlayerStates.ThirdPersonCamera, new ThirdPersonCameraState(_context, this));
