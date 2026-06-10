@@ -661,6 +661,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3178389698403921196, guid: 011c111380906b34fafb4d1e41aae3a0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 57d325dfe4893534fba4a1ffd4584962, type: 2}
+    - target: {fileID: 3520916936871095782, guid: 011c111380906b34fafb4d1e41aae3a0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b32133e790d3b3543b1883502a818f2b, type: 2}
     - target: {fileID: 3991497206129960342, guid: 011c111380906b34fafb4d1e41aae3a0, type: 3}
       propertyPath: _maxSlopeAngle
       value: 70
