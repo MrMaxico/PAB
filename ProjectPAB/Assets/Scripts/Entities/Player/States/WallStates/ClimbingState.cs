@@ -23,6 +23,9 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = Vector3.zero;
             Ctx.JumpDirection = Vector3.up * 1.2f;
 
+            Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.WallNormal, Vector3.up);
+            Ctx.PlayerObject.rotation = Quaternion.Euler(faceWallRotation.eulerAngles.x, faceWallRotation.eulerAngles.y, 0);
+
             Ctx.WallDetector.Tick();
         }
 
