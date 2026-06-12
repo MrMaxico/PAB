@@ -60,11 +60,11 @@ namespace Entities.Player.States
 
         protected override void HandleShiftInput(IReadOnlyButtonState shiftingState)
         {
-            if (shiftingState.WasReleasedThisFrame)
+            if (Factory.HasState(PlayerStates.Climbing))
             {
-                if (Factory.HasState(PlayerStates.Climbing))
+                if (Ctx.Stamina > 0)
                 {
-                    if (Ctx.Stamina > 0)
+                    if (shiftingState.OnReleased())
                     {
                         TrySwitchState(PlayerStates.Climbing);
                     }

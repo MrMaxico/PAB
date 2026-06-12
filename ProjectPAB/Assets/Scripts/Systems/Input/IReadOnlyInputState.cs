@@ -12,11 +12,13 @@ namespace Systems.Input
     {
         bool RawInputValue { get; }
         bool IsPressed { get; }
-        bool WasPressedThisFrame { get; }
-        bool WasReleasedThisFrame { get; }
-        bool UseBufferedPress();
-        bool UseBufferedPressAndHold();
+
+        bool OnPressed();
+        bool OnReleased();
         bool UseDoublePress();
+
+        bool UseBufferedPress();
+        bool UseBufferedPressOrHold();
     }
 
     public interface IReadOnlyMovementInputState : IReadOnlyInputState<UnityEngine.Vector2>

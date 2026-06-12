@@ -102,7 +102,7 @@ namespace Entities.Player.States
             {
                 if (Ctx.JumpsLeft > 0)
                 {
-                    if (jumpingState.UseBufferedPressAndHold())
+                    if (jumpingState.UseBufferedPressOrHold())
                     {
                         TrySwitchState(PlayerStates.Jumping);
                         return;

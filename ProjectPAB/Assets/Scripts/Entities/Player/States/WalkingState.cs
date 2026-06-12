@@ -72,7 +72,7 @@ namespace Entities.Player.States
         {
             if (Factory.HasState(PlayerStates.Sliding))
             {
-                if (slidingState.WasPressedThisFrame)
+                if (slidingState.OnPressed())
                 {
                     TrySwitchState(PlayerStates.Sliding);
                 }

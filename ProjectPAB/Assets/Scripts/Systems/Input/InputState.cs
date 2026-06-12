@@ -26,14 +26,17 @@ namespace Systems.Input
 
     public class ButtonInputState : IReadOnlyButtonState
     {
-        private const float BUFFER_TIME = 0.25f;
+        private const float BUFFER_TIME = 0.15f;
         private const float DOUBLE_PRESS_TIME = 0.25f;
 
+        // Matches your exact property name!
         public bool RawInputValue { get; private set; }
         public bool IsPressed { get; private set; }
-        public bool WasPressedThisFrame { get; private set; }
-        public bool WasReleasedThisFrame { get; private set; }
-        public bool IsDoublePressed { get; private set; }
+
+        // Hidden event triggers for your single-call methods
+        private bool _wasPressedEventFired;
+        private bool _wasReleasedEventFired;
+        private bool _isDoublePressedEventFired;
 
         private float _bufferExpirationTime = -999f;
         private float _lastPressTime = -999f;
@@ -44,29 +47,59 @@ namespace Systems.Input
             RawInputValue = newValue;
             IsPressed = newValue;
 
-            WasPressedThisFrame = newValue && !previousButtonState;
-            WasReleasedThisFrame = !newValue && previousButtonState;
-
-            if (WasPressedThisFrame)
+            // Physical button pressed down event
+            if (newValue && !previousButtonState)
             {
+                _bufferExpirationTime = Time.time + BUFFER_TIME;
+                _wasPressedEventFired = true;
+
+                // Check for double press tracking
                 if (Time.time - _lastPressTime <= DOUBLE_PRESS_TIME)
                 {
-                    IsDoublePressed = true;
-                }
-                else
-                {
-                    IsDoublePressed = false;
+                    _isDoublePressedEventFired = true;
                 }
 
                 _lastPressTime = Time.time;
-
-                _bufferExpirationTime = Time.time + BUFFER_TIME;
             }
 
-            if (WasReleasedThisFrame)
+            // Physical button released up event
+            if (!newValue && previousButtonState)
             {
-                IsDoublePressed = false;
+                _wasReleasedEventFired = true;
             }
+        }
+
+        // ─── PURE INLINE TRIGGER CONSUMPTION METHODS ─── \\
+
+        public bool OnPressed()
+        {
+            if (_wasPressedEventFired)
+            {
+                _wasPressedEventFired = false; // Consume instantly
+                return true;
+            }
+            return false;
+        }
+
+        public bool OnReleased()
+        {
+            if (_wasReleasedEventFired)
+            {
+                _wasReleasedEventFired = false; // Consume instantly
+                return true;
+            }
+            return false;
+        }
+
+        public bool UseDoublePress()
+        {
+            if (_isDoublePressedEventFired)
+            {
+                _isDoublePressedEventFired = false; // Consume instantly
+                _wasPressedEventFired = false;      // Prevent normal press from firing alongside it
+                return true;
+            }
+            return false;
         }
 
         public bool UseBufferedPress()
@@ -74,33 +107,18 @@ namespace Systems.Input
             if (Time.time <= _bufferExpirationTime)
             {
                 _bufferExpirationTime = -999f;
+                _wasPressedEventFired = false; // Synchronize consumption 
                 return true;
             }
             return false;
         }
 
-        public bool UseBufferedPressAndHold()
+        public bool UseBufferedPressOrHold()
         {
-            if (Time.time <= _bufferExpirationTime)
+            if (Time.time <= _bufferExpirationTime || IsPressed)
             {
                 _bufferExpirationTime = -999f;
-                return true;
-            }
-
-            if (IsPressed)
-            {
-                _bufferExpirationTime = -999f;
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool UseDoublePress()
-        {
-            if (IsDoublePressed)
-            {
-                IsDoublePressed = false;
+                _wasPressedEventFired = false; // Synchronize consumption
                 return true;
             }
             return false;
@@ -110,9 +128,9 @@ namespace Systems.Input
         {
             RawInputValue = false;
             IsPressed = false;
-            WasPressedThisFrame = false;
-            WasReleasedThisFrame = false;
-            IsDoublePressed = false;
+            _wasPressedEventFired = false;
+            _wasReleasedEventFired = false;
+            _isDoublePressedEventFired = false;
             _bufferExpirationTime = -999f;
             _lastPressTime = -999f;
         }

@@ -119,7 +119,7 @@ namespace Entities.Player.States
 
         protected override void HandleShiftInput(IReadOnlyButtonState shiftingState)
         {
-            if (shiftingState.WasPressedThisFrame)
+            if (shiftingState.OnPressed())
             {
                 if (Factory.HasState(PlayerStates.WallClinging))
                 {
