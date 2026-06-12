@@ -1,5 +1,6 @@
 using Entities.Player.Detection;
 using Entities.Player.States.Base;
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
@@ -87,18 +88,18 @@ namespace Entities.Player.States
 
         private Vector2 _climbInput;
 
-        protected override void HandleMoveInput(Vector2 movement)
+        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
         {
-            _climbInput = movement;
+            _climbInput = movementState.RawInputValue;
         }
 
-        protected override void HandleJumpInput(bool isJumping)
+        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
         {
-            if (isJumping)
+            if (Factory.HasState(PlayerStates.WallLunging))
             {
-                if (Factory.HasState(PlayerStates.WallLunging))
+                if (Ctx.Stamina > 0)
                 {
-                    if (Ctx.Stamina > 0)
+                    if (jumpingState.UseBufferedPress())
                     {
                         Vector3 wallNormal = Ctx.WallDetector.WallNormal;
                         Vector3 wallSideDir = Vector3.Cross(wallNormal, Vector3.up);
@@ -116,9 +117,9 @@ namespace Entities.Player.States
             }
         }
 
-        protected override void HandleShiftInput(bool isShifting)
+        protected override void HandleShiftInput(IReadOnlyButtonState shiftingState)
         {
-            if (isShifting)
+            if (shiftingState.WasPressedThisFrame)
             {
                 if (Factory.HasState(PlayerStates.WallClinging))
                 {

@@ -1,4 +1,5 @@
 using Entities.Player.States.Base;
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
@@ -35,11 +36,11 @@ namespace Entities.Player.States
 
         #region Inputs
 
-        public override void HandleSlideInputs(bool isSliding)
+        public override void HandleSlideInputs(IReadOnlyButtonState slidingState)
         {
             if (Factory.HasState(PlayerStates.Sliding))
             {
-                if (isSliding)
+                if (slidingState.WasPressedThisFrame)
                 {
                     TrySwitchState(PlayerStates.Sliding);
                 }

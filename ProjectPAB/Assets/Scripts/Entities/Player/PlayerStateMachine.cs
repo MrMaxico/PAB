@@ -210,54 +210,22 @@ namespace Entities.Player
                 return;
             }
 
-            _isMovementInput = InputProvider.GetMoveInput().magnitude > _moveThreshold;
-            _isRunInput = InputProvider.GetRunInput();
+            _isMovementInput = InputProvider.MovementState.RawInputValue.magnitude > _moveThreshold;
+            _isRunInput = InputProvider.RunState.RawInputValue;
 
-            _currentRootState.HandleMoveInputs(InputProvider.GetMoveInput());
-            _currentRootState.HandleRunInputs(InputProvider.GetRunInput());
-            _currentRootState.HandleShiftInputs(InputProvider.GetShiftInput());
-            _currentRootState.HandleSlideInputs(InputProvider.GetSlideInput());
+            _currentRootState.HandleMoveInputs(InputProvider.MovementState);
+            _currentRootState.HandleRunInputs(InputProvider.RunState);
+            _currentRootState.HandleShiftInputs(InputProvider.ShiftState);
+            _currentRootState.HandleSlideInputs(InputProvider.SlideState);
+            _currentRootState.HandleJumpInputs(InputProvider.JumpState);
 
-            // Context receives inputs through the state machine, not the hierarchy
-            _currentContextState?.HandleMoveInputs(InputProvider.GetMoveInput());
-            _currentContextState?.HandleRunInputs(InputProvider.GetRunInput());
-            _currentContextState?.HandleShiftInputs(InputProvider.GetShiftInput());
-            _currentContextState?.HandleSlideInputs(InputProvider.GetSlideInput());
-
-            HandleJumpInput();
+            _currentContextState?.HandleMoveInputs(InputProvider.MovementState);
+            _currentContextState?.HandleRunInputs(InputProvider.RunState);
+            _currentContextState?.HandleShiftInputs(InputProvider.ShiftState);
+            _currentContextState?.HandleSlideInputs(InputProvider.SlideState);
         }
 
         private bool _mStateToggle = false;
-
-        private void HandleJumpInput()
-        {
-            bool jumppressed = InputProvider.GetJumpInput();
-
-            if (jumppressed && !_jumpLock)
-            {
-                _jumpBuffered = true;
-                _lastJumpPressedTime = Time.time;
-                _jumpHeld = true;
-            }
-            else if (!jumppressed)
-            {
-                _jumpHeld = false;
-                _jumpLock = false;
-            }
-
-            if (_jumpBuffered && (Time.time - _lastJumpPressedTime > _jumpBufferTime))
-            {
-                _jumpBuffered = false;
-            }
-
-            _currentRootState.HandleJumpInputs(_jumpBuffered);
-        }
-
-        public void ConsumeJumpBuffer()
-        {
-            _jumpBuffered = false;
-            _jumpLock = true;
-        }
 
         // ─── State transitions ─── \\
 

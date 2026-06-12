@@ -19,8 +19,8 @@ namespace Entities.Player
 
         private void Update()
         {
-            _rotationX -= _inputProvider.GetMouseInput().y * _playerContext.CameraSensitivity;
-            _rotationY += _inputProvider.GetMouseInput().x * _playerContext.CameraSensitivity;
+            _rotationX -= _inputProvider.MouseState.RawInputValue.y * _playerContext.CameraSensitivity;
+            _rotationY += _inputProvider.MouseState.RawInputValue.x * _playerContext.CameraSensitivity;
             _rotationX = Mathf.Clamp(_rotationX, _playerContext.CameraPitchClamp.x, _playerContext.CameraPitchClamp.y);
 
             transform.rotation = Quaternion.Euler(_rotationX, _rotationY, 0);

@@ -1,5 +1,6 @@
 using Entities.Player.Detection;
 using Entities.Player.States.Base;
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
@@ -57,13 +58,13 @@ namespace Entities.Player.States
 
         #region Inputs
 
-        protected override void HandleJumpInput(bool isJumping)
+        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
         {
-            if (isJumping)
+            if (Factory.HasState(PlayerStates.Jumping))
             {
-                if (Factory.HasState(PlayerStates.Jumping))
+                if (Ctx.JumpsLeft > 0 && Ctx.GroundDetector.CoyoteTimeCounter > 0)
                 {
-                    if (Ctx.JumpsLeft > 0 && Ctx.GroundDetector.CoyoteTimeCounter > 0)
+                    if (jumpingState.UseBufferedPress())
                     {
                         TrySwitchState(PlayerStates.Jumping);
                     }

@@ -1,3 +1,4 @@
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States.Base
@@ -142,39 +143,46 @@ namespace Entities.Player.States.Base
 
         #region InputActions
 
-        public override void HandleJumpInputs(bool isJumping)
+        public override void HandleJumpInputs(IReadOnlyButtonState jumpingState)
         {
-            HandleJumpInput(isJumping);
+            HandleJumpInput(jumpingState);
 
-            _contextSubState?.HandleJumpInputs(isJumping);
+            _contextSubState?.HandleJumpInputs(jumpingState);
         }
 
-        public override void HandleMoveInputs(Vector2 movement)
+        public override void HandleMoveInputs(IReadOnlyMovementInputState movementState)
         {
-            HandleMoveInput(movement);
+            HandleMoveInput(movementState);
 
-            _contextSubState?.HandleMoveInputs(movement);
+            _contextSubState?.HandleMoveInputs(movementState);
         }
 
-        public override void HandleRunInputs(bool isRunning)
+        public override void HandleRunInputs(IReadOnlyButtonState runningState)
         {
-            HandleRunInput(isRunning);
+            HandleRunInput(runningState);
 
-            _contextSubState?.HandleRunInputs(isRunning);
+            _contextSubState?.HandleRunInputs(runningState);
         }
 
-        public override void HandleShiftInputs(bool isShifting)
+        public override void HandleShiftInputs(IReadOnlyButtonState shiftingState)
         {
-            HandleShiftInput(isShifting);
+            HandleShiftInput(shiftingState);
 
-            _contextSubState?.HandleShiftInputs(isShifting);
+            _contextSubState?.HandleShiftInputs(shiftingState);
         }
 
-        public override void HandleShootInputs(bool isShooting)
+        public override void HandleShootInputs(IReadOnlyButtonState shootingState)
         {
-            HandleShootInput(isShooting);
+            HandleShootInput(shootingState);
 
-            _contextSubState?.HandleShootInputs(isShooting);
+            _contextSubState?.HandleShootInputs(shootingState);
+        }
+
+        public override void HandleSlideInputs(IReadOnlyButtonState slidingState)
+        {
+            HandleSlideInput(slidingState);
+
+            _contextSubState?.HandleSlideInputs(slidingState);
         }
 
         #endregion

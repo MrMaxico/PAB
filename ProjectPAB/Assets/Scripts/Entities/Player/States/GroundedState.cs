@@ -1,5 +1,6 @@
 using Entities.Player.Detection;
 using Entities.Player.States.Base;
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
@@ -90,18 +91,18 @@ namespace Entities.Player.States
 
         private Vector2 _currentInput;
 
-        protected override void HandleMoveInput(Vector2 movement)
+        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
         {
-            _currentInput = movement;
+            _currentInput = movementState.RawInputValue;
         }
 
-        protected override void HandleJumpInput(bool isJumping)
+        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
         {
-            if (isJumping)
+            if (Factory.HasState(PlayerStates.Jumping))
             {
-                if (Factory.HasState(PlayerStates.Jumping))
+                if (Ctx.JumpsLeft > 0)
                 {
-                    if (Ctx.JumpsLeft > 0)
+                    if (jumpingState.UseBufferedPressAndHold())
                     {
                         TrySwitchState(PlayerStates.Jumping);
                         return;

@@ -1,4 +1,5 @@
 using Entities.Player.States.Base;
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
@@ -56,11 +57,11 @@ namespace Entities.Player.States
 
         #region Inputs
 
-        protected override void HandleJumpInput(bool isJumping)
+        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
         {
-            if (isJumping)
+            if (Factory.HasState(PlayerStates.Jumping))
             {
-                if (Factory.HasState(PlayerStates.Jumping))
+                if (jumpingState.UseBufferedPress())
                 {
                     Vector3 forceAway = Ctx.WallDetector.WallNormal;
                     Vector3 forceUp = Vector3.up * 1.5f;

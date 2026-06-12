@@ -6,159 +6,129 @@ namespace Systems.Input
     public class LocalInputProvider : MonoBehaviour, IInputProvider
     {
         [SerializeField] private PlayerInput _playerInput;
-        [Header("")]
-        [SerializeField] private Vector2 _moveInput;
-        [SerializeField] private bool _jumpInput;
-        [SerializeField] private bool _runInput;
-        [SerializeField] private Vector2 _mouseInput;
-        [SerializeField] private bool _shiftInput;
-        [SerializeField] private bool _shootInput;
-        [SerializeField] private bool _slideInput;
-
         [SerializeField] private bool _toggleRun;
+
+        // Concrete state trackers handling their own logic
+        private readonly MovementInputState _moveState = new();
+        private readonly InputState<Vector2> _mouseState = new();
+        private readonly ButtonInputState _jumpState = new();
+        private readonly ButtonInputState _runState = new();
+        private readonly ButtonInputState _shiftState = new();
+        private readonly ButtonInputState _shootState = new();
+        private readonly ButtonInputState _slideState = new();
+
+        // Implementing the interface properties by exposing them as read-only
+        public MovementInputState MoveState => _moveState;
+        public IReadOnlyInputState<Vector2> MouseState => _mouseState;
+        public IReadOnlyButtonState JumpState => _jumpState;
+        public IReadOnlyButtonState RunState => _runState;
+        public IReadOnlyButtonState ShiftState => _shiftState;
+        public IReadOnlyButtonState ShootState => _shootState;
+        public IReadOnlyButtonState BlackState => _shootState; // Handled based on project's previous mapped fields
+        public IReadOnlyButtonState SlideState => _slideState;
+
         public bool ToggleRun { get => _toggleRun; set => _toggleRun = value; }
+
+        IReadOnlyMovementInputState IInputProvider.MovementState => MoveState;
 
         private void OnEnable()
         {
-            var inputActions = _playerInput.actions;
-
-            var moveAction = inputActions["Move"];
-            moveAction.started += OnMoveInput;
-            moveAction.performed += OnMoveInput;
-            moveAction.canceled += OnMoveInput;
-
-            var jumpAction = inputActions["Jump"];
-            jumpAction.started += OnJumpInput;
-            jumpAction.performed += OnJumpInput;
-            jumpAction.canceled += OnJumpInput;
-
-            var runAction = inputActions["Run"];
-            runAction.started += OnRunInput;
-            runAction.performed += OnRunInput;
-            runAction.canceled += OnRunInput;
-
-            var cameraAction = inputActions["Camera"];
-            cameraAction.started += OnCameraInput;
-            cameraAction.performed += OnCameraInput;
-            cameraAction.canceled += OnCameraInput;
-
-            var shiftAction = inputActions["Shift"];
-            shiftAction.started += OnShiftInput;
-            shiftAction.performed += OnShiftInput;
-            shiftAction.canceled += OnShiftInput;
-
-            var shootAction = inputActions["Shoot"];
-            shootAction.started += OnShootInput;
-            shootAction.performed += OnShootInput;
-            shootAction.canceled += OnShootInput;
-
-            var slideAction = inputActions["Slide"];
-            slideAction.started += OnSlideInput;
-            slideAction.performed += OnSlideInput;
-            slideAction.canceled += OnSlideInput;
+            RegisterInputActions(true);
         }
 
         private void OnDisable()
         {
+            RegisterInputActions(false);
+
+            _moveState.Reset();
+            _mouseState.Reset();
+            _jumpState.Reset();
+            _runState.Reset();
+            _shiftState.Reset();
+            _shootState.Reset();
+            _slideState.Reset();
+        }
+
+        private void RegisterInputActions(bool subscribe)
+        {
+            if (_playerInput == null || _playerInput.actions == null) return;
+
             var inputActions = _playerInput.actions;
 
-            var moveAction = inputActions["Move"];
-            moveAction.started -= OnMoveInput;
-            moveAction.performed -= OnMoveInput;
-            moveAction.canceled -= OnMoveInput;
-
-            var jumpAction = inputActions["Jump"];
-            jumpAction.started -= OnJumpInput;
-            jumpAction.performed -= OnJumpInput;
-            jumpAction.canceled -= OnJumpInput;
-
-            var runAction = inputActions["Run"];
-            runAction.started -= OnRunInput;
-            runAction.performed -= OnRunInput;
-            runAction.canceled -= OnRunInput;
-
-            var cameraAction = inputActions["Camera"];
-            cameraAction.started -= OnCameraInput;
-            cameraAction.performed -= OnCameraInput;
-            cameraAction.canceled -= OnCameraInput;
-
-            var shiftAction = inputActions["Shift"];
-            shiftAction.started -= OnShiftInput;
-            shiftAction.performed -= OnShiftInput;
-            shiftAction.canceled -= OnShiftInput;
-
-            var shootAction = inputActions["Shoot"];
-            shootAction.started -= OnShootInput;
-            shootAction.performed -= OnShootInput;
-            shootAction.canceled -= OnShootInput;
-
-            var slideAction = inputActions["Slide"];
-            slideAction.started -= OnSlideInput;
-            slideAction.performed -= OnSlideInput;
-            slideAction.canceled -= OnSlideInput;
-
-            _moveInput = Vector2.zero;
-            _runInput = false;
-            _jumpInput = false;
-            _shiftInput = false;
-            _shootInput = false;
-            _slideInput = false;
+            ToggleActionBinding(inputActions["Move"], OnMoveInput, subscribe);
+            ToggleActionBinding(inputActions["Jump"], OnJumpInput, subscribe);
+            ToggleActionBinding(inputActions["Run"], OnRunInput, subscribe);
+            ToggleActionBinding(inputActions["Camera"], OnCameraInput, subscribe);
+            ToggleActionBinding(inputActions["Shift"], OnShiftInput, subscribe);
+            ToggleActionBinding(inputActions["Shoot"], OnShootInput, subscribe);
+            ToggleActionBinding(inputActions["Slide"], OnSlideInput, subscribe);
         }
+
+        private void ToggleActionBinding(InputAction action, System.Action<InputAction.CallbackContext> callback, bool subscribe)
+        {
+            if (action == null) return;
+
+            if (subscribe)
+            {
+                action.started += callback;
+                action.performed += callback;
+                action.canceled += callback;
+            }
+            else
+            {
+                action.started -= callback;
+                action.performed -= callback;
+                action.canceled -= callback;
+            }
+        }
+
+        #region Input System Callbacks
 
         private void OnMoveInput(InputAction.CallbackContext context)
         {
-            _moveInput = context.ReadValue<Vector2>();
+            _moveState.UpdateValue(context.ReadValue<Vector2>());
         }
 
         private void OnJumpInput(InputAction.CallbackContext context)
         {
-            _jumpInput = context.ReadValueAsButton();
+            _jumpState.UpdateValue(context.ReadValueAsButton());
         }
 
         private void OnRunInput(InputAction.CallbackContext context)
         {
             if (_toggleRun)
             {
-                if (context.started) _runInput = !_runInput;
+                if (context.started)
+                {
+                    _runState.UpdateValue(!_runState.IsPressed);
+                }
             }
             else
             {
-                _runInput = context.ReadValueAsButton();
+                _runState.UpdateValue(context.ReadValueAsButton());
             }
         }
 
         private void OnCameraInput(InputAction.CallbackContext context)
         {
-            _mouseInput = context.ReadValue<Vector2>();
+            _mouseState.UpdateValue(context.ReadValue<Vector2>());
         }
 
         private void OnShiftInput(InputAction.CallbackContext context)
         {
-            _shiftInput = context.ReadValueAsButton();
+            _shiftState.UpdateValue(context.ReadValueAsButton());
         }
 
         private void OnShootInput(InputAction.CallbackContext context)
         {
-            _shootInput = context.ReadValueAsButton();
+            _shootState.UpdateValue(context.ReadValueAsButton());
         }
 
         private void OnSlideInput(InputAction.CallbackContext context)
         {
-            _slideInput = context.ReadValueAsButton();
+            _slideState.UpdateValue(context.ReadValueAsButton());
         }
 
-        public Vector2 GetMoveInput() => _moveInput;
-
-        public bool GetJumpInput() => _jumpInput;
-
-        public bool GetRunInput() => _runInput;
-
-        public Vector2 GetMouseInput() => _mouseInput;
-
-        public bool GetShiftInput() => _shiftInput;
-
-        public bool GetShootInput() => _shootInput;
-
-        public bool GetSlideInput() => _slideInput;
+        #endregion
     }
 }

@@ -64,8 +64,8 @@ namespace Entities.Player.States
             Vector2 pitchClamp = Ctx.PlayerContext.CameraPitchClamp;
 
             // Accumulate rotation
-            _yaw += input.GetMouseInput().x * sensitivity;
-            _pitch -= input.GetMouseInput().y * sensitivity;
+            _yaw += input.MouseState.RawInputValue.x * sensitivity;
+            _pitch -= input.MouseState.RawInputValue.y * sensitivity;
             _pitch = Mathf.Clamp(_pitch, pitchClamp.x, pitchClamp.y);
 
             // Snap to head anchor position

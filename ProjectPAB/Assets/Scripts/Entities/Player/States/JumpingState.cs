@@ -41,7 +41,7 @@ namespace Entities.Player.States
             Ctx.WalkJumpToWalledTime = Ctx.MaxWalkJumpToWalledTime;
             Ctx.JumpToWalledTime = Ctx.MaxJumpToWalledTime;
 
-            Ctx.ConsumeJumpBuffer();
+            //Ctx.ConsumeJumpBuffer();
             Ctx.GroundDetector.ResetCoyoteTime();
 
             if (previousState.StateKey == PlayerStates.Grounded)

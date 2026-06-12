@@ -1,4 +1,5 @@
 using Entities.Player.States.Base;
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
@@ -46,9 +47,9 @@ namespace Entities.Player.States
 
         #region Inputs
 
-        protected override void HandleMoveInput(Vector2 movement)
+        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
         {
-            _moveInput = movement;
+            _moveInput = movementState.RawInputValue;
         }
 
         #endregion

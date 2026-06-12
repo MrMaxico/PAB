@@ -4,12 +4,12 @@ namespace Systems.Input
 {
     public interface IInputProvider
     {
-        Vector2 GetMoveInput();
-        bool GetJumpInput();
-        bool GetRunInput();
-        Vector2 GetMouseInput();
-        bool GetShiftInput();
-        bool GetShootInput();
-        bool GetSlideInput();
+        IReadOnlyMovementInputState MovementState { get; }
+        IReadOnlyInputState<Vector2> MouseState { get; }
+        IReadOnlyButtonState JumpState { get; }
+        IReadOnlyButtonState RunState { get; }
+        IReadOnlyButtonState ShiftState { get; }
+        IReadOnlyButtonState ShootState { get; }
+        IReadOnlyButtonState SlideState { get; }
     }
 }

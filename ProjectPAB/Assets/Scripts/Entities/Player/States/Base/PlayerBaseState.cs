@@ -1,3 +1,4 @@
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States.Base
@@ -279,26 +280,26 @@ namespace Entities.Player.States.Base
 
         #region InputActions
 
-        protected virtual void HandleJumpInput(bool isJumping) { }
-        public virtual void HandleJumpInputs(bool isJumping)
+        protected virtual void HandleJumpInput(IReadOnlyButtonState jumpState) { }
+        public virtual void HandleJumpInputs(IReadOnlyButtonState jumpState)
         {
-            HandleJumpInput(isJumping);
+            HandleJumpInput(jumpState);
 
-            _movementSubState?.HandleJumpInputs(isJumping);
-            _actionSubState?.HandleJumpInputs(isJumping);
+            _movementSubState?.HandleJumpInputs(jumpState);
+            _actionSubState?.HandleJumpInputs(jumpState);
         }
 
-        protected virtual void HandleMoveInput(Vector2 movement) { }
-        public virtual void HandleMoveInputs(Vector2 movement)
+        protected virtual void HandleMoveInput(IReadOnlyMovementInputState movementState) { }
+        public virtual void HandleMoveInputs(IReadOnlyMovementInputState movementState)
         {
-            HandleMoveInput(movement);
+            HandleMoveInput(movementState);
 
-            _movementSubState?.HandleMoveInputs(movement);
-            _actionSubState?.HandleMoveInputs(movement);
+            _movementSubState?.HandleMoveInputs(movementState);
+            _actionSubState?.HandleMoveInputs(movementState);
         }
 
-        protected virtual void HandleRunInput(bool isRunning) { }
-        public virtual void HandleRunInputs(bool isRunning)
+        protected virtual void HandleRunInput(IReadOnlyButtonState isRunning) { }
+        public virtual void HandleRunInputs(IReadOnlyButtonState isRunning)
         {
             HandleRunInput(isRunning);
 
@@ -306,31 +307,31 @@ namespace Entities.Player.States.Base
             _actionSubState?.HandleRunInputs(isRunning);
         }
 
-        protected virtual void HandleShiftInput(bool isShifting) { }
-        public virtual void HandleShiftInputs(bool isShifting)
+        protected virtual void HandleShiftInput(IReadOnlyButtonState shiftingState) { }
+        public virtual void HandleShiftInputs(IReadOnlyButtonState shiftingState)
         {
-            HandleShiftInput(isShifting);
+            HandleShiftInput(shiftingState);
 
-            _movementSubState?.HandleShiftInputs(isShifting);
-            _actionSubState?.HandleShiftInputs(isShifting);
+            _movementSubState?.HandleShiftInputs(shiftingState);
+            _actionSubState?.HandleShiftInputs(shiftingState);
         }
 
-        protected virtual void HandleShootInput(bool isShooting) { }
-        public virtual void HandleShootInputs(bool isShooting)
+        protected virtual void HandleShootInput(IReadOnlyButtonState shootingState) { }
+        public virtual void HandleShootInputs(IReadOnlyButtonState shootingState)
         {
-            HandleShootInput(isShooting);
+            HandleShootInput(shootingState);
 
-            _movementSubState?.HandleShootInputs(isShooting);
-            _actionSubState?.HandleShootInputs(isShooting);
+            _movementSubState?.HandleShootInputs(shootingState);
+            _actionSubState?.HandleShootInputs(shootingState);
         }
 
-        protected virtual void HandleSlideInput(bool isSliding) { }
-        public virtual void HandleSlideInputs(bool isSliding)
+        protected virtual void HandleSlideInput(IReadOnlyButtonState slidingState) { }
+        public virtual void HandleSlideInputs(IReadOnlyButtonState slidingState)
         {
-            HandleSlideInput(isSliding);
+            HandleSlideInput(slidingState);
 
-            _movementSubState?.HandleSlideInputs(isSliding);
-            _actionSubState?.HandleSlideInputs(isSliding);
+            _movementSubState?.HandleSlideInputs(slidingState);
+            _actionSubState?.HandleSlideInputs(slidingState);
         }
 
         #endregion
