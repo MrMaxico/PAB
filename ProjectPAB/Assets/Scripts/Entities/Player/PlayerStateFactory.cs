@@ -26,6 +26,7 @@ namespace Entities.Player
         WallWalking,
         WallClinging,
         WallLunging,
+        LedgeHanging,
 
         // Combat/Action Keys (Generic slots for swapped weapons)
         PrimaryAction,
@@ -68,6 +69,7 @@ namespace Entities.Player
             RegisterState(PlayerStates.WallWalking, new WallWalkingState(_context, this));
             RegisterState(PlayerStates.WallClinging, new WallClingingState(_context, this));
             RegisterState(PlayerStates.WallLunging, new WallLungingState(_context, this));
+            RegisterState(PlayerStates.LedgeHanging, new LedgeHangState(_context, this));
             RegisterState(PlayerStates.ClimbUp, new ClimbUpState(_context, this));
 
             // --- Camera Context States ---

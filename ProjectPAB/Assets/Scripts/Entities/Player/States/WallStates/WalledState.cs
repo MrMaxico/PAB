@@ -23,7 +23,7 @@ namespace Entities.Player.States
 
             Ctx.GroundDetector.AddCheck(GroundCheck, Vector3.down, 0.6f, 0, CastType.SphereCast, radius: 0.5f);
 
-            if (Factory.HasState(PlayerStates.Climbing))
+            if (Factory.HasState(PlayerStates.Climbing) || Factory.HasState(PlayerStates.LedgeHanging))
             {
                 Ctx.WallDetector.AddCheck(FrontCheck, Vector3.forward, 0.7f, 0, CastType.SphereCast, radius: 0.3f);
             }
