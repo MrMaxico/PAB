@@ -3,11 +3,13 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class RunningState : MovementBaseState
+    public class SlidingState : MovementBaseState
     {
-        public RunningState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
+        private float currentSlideSpeed;
+
+        public SlidingState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
-            StateKey = PlayerStates.Running;
+            StateKey = PlayerStates.Sliding;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -22,71 +24,58 @@ namespace Entities.Player.States
 
         #region MonoBehaveiours
 
-        public override void UpdateState() { }
+        public override void UpdateState()
+        {
+            if (Ctx.GroundDetector.IsSloped && Ctx.MoveDirection.y < 0)
+            {
+                if (currentSlideSpeed < Ctx.PlayerContext.MaxSlideSpeed)
+                {
+                    currentSlideSpeed += Time.fixedDeltaTime * Ctx.PlayerContext.SlideAcceleration;
+                }
+                else
+                {
+                    currentSlideSpeed = Ctx.PlayerContext.MaxSlideSpeed;
+                }
+            }
+            else if (!Ctx.GroundDetector.IsSloped)
+            {
+                currentSlideSpeed = Ctx.PlayerContext.BaseSlideSpeed;
+            }
+        }
 
         public override void FixedUpdateState()
         {
-            HandleRunning();
+            HandleSliding();
         }
 
         public override void LateUpdateState() { }
 
         #endregion
 
-        #region Inputs
-
-        public override void HandleSlideInputs(bool isSliding)
-        {
-            if (Factory.HasState(PlayerStates.Sliding))
-            {
-                if (isSliding)
-                {
-                    TrySwitchState(PlayerStates.Sliding);
-                }
-            }
-        }
-
-        #endregion
-
         #region State Logic
 
-        private void HandleRunning()
+        private void HandleSliding()
         {
             Vector3 moveDir = Ctx.MoveDirection;
 
-            Vector3 targetVelocity = moveDir * Ctx.PlayerContext.RunSpeed;
+            Vector3 targetVelocity = moveDir * currentSlideSpeed;
             float accel = 20f;
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * accel);
 
             if (moveDir.magnitude > 0.1f)
             {
-                Vector3 rotationDir = new Vector3(moveDir.x, 0, moveDir.z);
+                Vector3 rotationDir = new(moveDir.x, 0, moveDir.z);
                 Quaternion targetRotation = Quaternion.LookRotation(rotationDir, Vector3.up);
 
                 Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, targetRotation, Time.fixedDeltaTime * 10f);
             }
         }
 
-
         #endregion
 
         public override void CheckSwitchState()
         {
-            if (Factory.HasState(PlayerStates.Walking))
-            {
-                if (!Ctx.IsRunInput)
-                {
-                    TrySwitchState(PlayerStates.Walking);
-                }
-            }
 
-            if (Factory.HasState(PlayerStates.Idling))
-            {
-                if (!Ctx.IsMovementInput)
-                {
-                    TrySwitchState(PlayerStates.Idling);
-                }
-            }
         }
     }
 }

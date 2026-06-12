@@ -49,16 +49,9 @@ namespace Entities.Player.States
             }
         }
 
-        public override void FixedUpdateState()
-        {
-            Quaternion faceFromWall = Quaternion.LookRotation(Ctx.WallDetector.WallNormal, Vector3.up);
-            Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, faceFromWall, Time.fixedDeltaTime * 15f);
-        }
+        public override void FixedUpdateState() { }
 
-        public override void LateUpdateState()
-        {
-
-        }
+        public override void LateUpdateState() { }
 
         #endregion
 

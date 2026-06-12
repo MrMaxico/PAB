@@ -18,6 +18,7 @@ namespace Entities.Player
         Idling,
         Walking,
         Running,
+        Sliding,
 
         // Specialized Movement
         Climbing,
@@ -60,6 +61,7 @@ namespace Entities.Player
             RegisterState(PlayerStates.Idling, new IdlingState(_context, this));
             RegisterState(PlayerStates.Walking, new WalkingState(_context, this));
             RegisterState(PlayerStates.Running, new RunningState(_context, this));
+            RegisterState(PlayerStates.Sliding, new SlidingState(_context, this));
 
             // --- Climbing/Wall States ---
             RegisterState(PlayerStates.Climbing, new ClimbingState(_context, this));

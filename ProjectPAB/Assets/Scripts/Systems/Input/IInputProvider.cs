@@ -10,5 +10,6 @@ namespace Systems.Input
         Vector2 GetMouseInput();
         bool GetShiftInput();
         bool GetShootInput();
+        bool GetSlideInput();
     }
 }

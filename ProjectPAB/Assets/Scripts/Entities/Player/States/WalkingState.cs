@@ -49,7 +49,6 @@ namespace Entities.Player.States
 
             if (Ctx.WallDetector.IsHit("Front"))
             {
-
                 Vector3 playerMoveDir = Ctx.Rigidbody.linearVelocity.normalized;
                 Vector3 wallNormal = Ctx.WallDetector.WallNormal;
                 float dotProduct = Vector3.Dot(playerMoveDir, wallNormal);
@@ -68,6 +67,17 @@ namespace Entities.Player.States
 
         #region Inputs
 
+        public override void HandleSlideInputs(bool isSliding)
+        {
+            if (Factory.HasState(PlayerStates.Sliding))
+            {
+                if (isSliding)
+                {
+                    TrySwitchState(PlayerStates.Sliding);
+                }
+            }
+        }
+
         #endregion
 
         #region State Logic
@@ -82,7 +92,7 @@ namespace Entities.Player.States
 
             if (moveDir.magnitude > 0.1f)
             {
-                Vector3 rotationDir = new Vector3(moveDir.x, 0, moveDir.z);
+                Vector3 rotationDir = new(moveDir.x, 0, moveDir.z);
                 Quaternion targetRotation = Quaternion.LookRotation(rotationDir, Vector3.up);
 
                 Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, targetRotation, Time.fixedDeltaTime * 10f);

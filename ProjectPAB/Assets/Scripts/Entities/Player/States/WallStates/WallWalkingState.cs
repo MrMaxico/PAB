@@ -79,7 +79,7 @@ namespace Entities.Player.States
 
         private void HandleWallRunning()
         {
-            Vector3 targetVelocity = _runDirection * 10f;
+            Vector3 targetVelocity = _runDirection * Ctx.PlayerContext.WallRunSpeed;
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * 20f);
         }
 

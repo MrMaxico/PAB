@@ -216,11 +216,13 @@ namespace Entities.Player
             _currentRootState.HandleMoveInputs(InputProvider.GetMoveInput());
             _currentRootState.HandleRunInputs(InputProvider.GetRunInput());
             _currentRootState.HandleShiftInputs(InputProvider.GetShiftInput());
+            _currentRootState.HandleSlideInputs(InputProvider.GetSlideInput());
 
             // Context receives inputs through the state machine, not the hierarchy
             _currentContextState?.HandleMoveInputs(InputProvider.GetMoveInput());
             _currentContextState?.HandleRunInputs(InputProvider.GetRunInput());
             _currentContextState?.HandleShiftInputs(InputProvider.GetShiftInput());
+            _currentContextState?.HandleSlideInputs(InputProvider.GetSlideInput());
 
             HandleJumpInput();
         }

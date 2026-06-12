@@ -324,6 +324,15 @@ namespace Entities.Player.States.Base
             _actionSubState?.HandleShootInputs(isShooting);
         }
 
+        protected virtual void HandleSlideInput(bool isSliding) { }
+        public virtual void HandleSlideInputs(bool isSliding)
+        {
+            HandleSlideInput(isSliding);
+
+            _movementSubState?.HandleSlideInputs(isSliding);
+            _actionSubState?.HandleSlideInputs(isSliding);
+        }
+
         #endregion
     }
 }

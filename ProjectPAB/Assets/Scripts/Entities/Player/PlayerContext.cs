@@ -66,6 +66,21 @@ namespace Entities.Player
         [SerializeField] private float _runSpeed = 8f;
         public float RunSpeed => _runSpeed;
 
+        [SerializeField] private float _climbSpeed = 7f;
+        public float ClimbSpeed => _climbSpeed;
+
+        [SerializeField] private float _wallRunSpeed = 10f;
+        public float WallRunSpeed => _wallRunSpeed;
+
+        [SerializeField] private float _baseSlideSpeed = 6f;
+        public float BaseSlideSpeed => _baseSlideSpeed;
+
+        [SerializeField] private float _maxSlideSpeed = 15f;
+        public float MaxSlideSpeed => _maxSlideSpeed;
+
+        [SerializeField] private float _slideAcceleration = 5f;
+        public float SlideAcceleration => _slideAcceleration;
+
         [Header("Skateboard Settings")]
         [SerializeField] private float _maxSkateboardSpeed = 12f;
         public float MaxSkateboardSpeed => _maxSkateboardSpeed;

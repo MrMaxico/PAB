@@ -145,6 +145,15 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Slide"",
+                    ""type"": ""Button"",
+                    ""id"": ""101307c2-f7ef-487f-93d2-d09daaac9832"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -257,6 +266,17 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
                     ""action"": ""Shoot"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fb43e16a-1581-41da-874f-8aff9b4b8245"",
+                    ""path"": ""<Keyboard>/leftCtrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Slide"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -271,6 +291,7 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
         m_Controlls_Camera = m_Controlls.FindAction("Camera", throwIfNotFound: true);
         m_Controlls_Shift = m_Controlls.FindAction("Shift", throwIfNotFound: true);
         m_Controlls_Shoot = m_Controlls.FindAction("Shoot", throwIfNotFound: true);
+        m_Controlls_Slide = m_Controlls.FindAction("Slide", throwIfNotFound: true);
     }
 
     ~@NewControls()
@@ -357,6 +378,7 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Controlls_Camera;
     private readonly InputAction m_Controlls_Shift;
     private readonly InputAction m_Controlls_Shoot;
+    private readonly InputAction m_Controlls_Slide;
     /// <summary>
     /// Provides access to input actions defined in input action map "Controlls".
     /// </summary>
@@ -392,6 +414,10 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Controlls/Shoot".
         /// </summary>
         public InputAction @Shoot => m_Wrapper.m_Controlls_Shoot;
+        /// <summary>
+        /// Provides access to the underlying input action "Controlls/Slide".
+        /// </summary>
+        public InputAction @Slide => m_Wrapper.m_Controlls_Slide;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -436,6 +462,9 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
             @Shoot.started += instance.OnShoot;
             @Shoot.performed += instance.OnShoot;
             @Shoot.canceled += instance.OnShoot;
+            @Slide.started += instance.OnSlide;
+            @Slide.performed += instance.OnSlide;
+            @Slide.canceled += instance.OnSlide;
         }
 
         /// <summary>
@@ -465,6 +494,9 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
             @Shoot.started -= instance.OnShoot;
             @Shoot.performed -= instance.OnShoot;
             @Shoot.canceled -= instance.OnShoot;
+            @Slide.started -= instance.OnSlide;
+            @Slide.performed -= instance.OnSlide;
+            @Slide.canceled -= instance.OnSlide;
         }
 
         /// <summary>
@@ -547,5 +579,12 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnShoot(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Slide" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSlide(InputAction.CallbackContext context);
     }
 }

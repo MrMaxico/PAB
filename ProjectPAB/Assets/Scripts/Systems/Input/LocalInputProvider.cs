@@ -13,6 +13,7 @@ namespace Systems.Input
         [SerializeField] private Vector2 _mouseInput;
         [SerializeField] private bool _shiftInput;
         [SerializeField] private bool _shootInput;
+        [SerializeField] private bool _slideInput;
 
         [SerializeField] private bool _toggleRun;
         public bool ToggleRun { get => _toggleRun; set => _toggleRun = value; }
@@ -50,6 +51,11 @@ namespace Systems.Input
             shootAction.started += OnShootInput;
             shootAction.performed += OnShootInput;
             shootAction.canceled += OnShootInput;
+
+            var slideAction = inputActions["Slide"];
+            slideAction.started += OnSlideInput;
+            slideAction.performed += OnSlideInput;
+            slideAction.canceled += OnSlideInput;
         }
 
         private void OnDisable()
@@ -86,11 +92,17 @@ namespace Systems.Input
             shootAction.performed -= OnShootInput;
             shootAction.canceled -= OnShootInput;
 
+            var slideAction = inputActions["Slide"];
+            slideAction.started -= OnSlideInput;
+            slideAction.performed -= OnSlideInput;
+            slideAction.canceled -= OnSlideInput;
+
             _moveInput = Vector2.zero;
             _runInput = false;
             _jumpInput = false;
             _shiftInput = false;
             _shootInput = false;
+            _slideInput = false;
         }
 
         private void OnMoveInput(InputAction.CallbackContext context)
@@ -130,6 +142,11 @@ namespace Systems.Input
             _shootInput = context.ReadValueAsButton();
         }
 
+        private void OnSlideInput(InputAction.CallbackContext context)
+        {
+            _slideInput = context.ReadValueAsButton();
+        }
+
         public Vector2 GetMoveInput() => _moveInput;
 
         public bool GetJumpInput() => _jumpInput;
@@ -141,5 +158,7 @@ namespace Systems.Input
         public bool GetShiftInput() => _shiftInput;
 
         public bool GetShootInput() => _shootInput;
+
+        public bool GetSlideInput() => _slideInput;
     }
 }
