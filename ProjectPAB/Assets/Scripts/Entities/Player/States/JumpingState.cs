@@ -7,6 +7,9 @@ namespace Entities.Player.States
     public class JumpingState : PlayerBaseState
     {
         private const string GroundCheck = "Ground";
+
+        private const string RailCheck = "Rail";
+
         private const string FrontCheck = "Front";
         private const string RightCheck = "Right";
         private const string LeftCheck = "Left";
@@ -24,7 +27,10 @@ namespace Entities.Player.States
 
             Ctx.GroundDetector.AddCheck(GroundCheck, Vector3.down, 0.55f, 0, CastType.SphereCast, radius: 0.3f);
 
+            Ctx.RailDetector.AddCheck(RailCheck, Vector3.down, 0.8f, 0, CastType.SphereCast, radius: 0.35f);
+
             Ctx.WallDetector.AddCheck(FrontCheck, Vector3.forward, 0.7f, 0, CastType.Raycast, radius: 0.3f);
+
 
             if (Factory.HasState(PlayerStates.WallWalking))
             {
@@ -51,6 +57,10 @@ namespace Entities.Player.States
             else if (previousState.StateKey == PlayerStates.Walled)
             {
                 Ctx.WallDetector.RegisterJumpTime();
+            }
+            else if (previousState.StateKey == PlayerStates.Railed)
+            {
+                Ctx.RailDetector.RegisterJumpTime();
             }
 
             _rb = Ctx.Rigidbody;
@@ -116,6 +126,15 @@ namespace Entities.Player.States
                 if (Ctx.WallDetector.HasAnyHit() && Ctx.JumpToWalledTime <= 0)
                 {
                     TrySwitchState(PlayerStates.Walled);
+                    return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Railed))
+            {
+                if (Ctx.RailDetector.HasAnyHit())
+                {
+                    TrySwitchState(PlayerStates.Railed);
                     return;
                 }
             }
