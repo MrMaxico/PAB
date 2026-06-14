@@ -40,6 +40,9 @@ namespace Entities.Player
         [SerializeField] private WallDetector _wallDetector;
         public WallDetector WallDetector => _wallDetector;
 
+        [SerializeField] private RailDetector _railDetector;
+        public RailDetector RailDetector => _railDetector;
+
         [Header("Camera")]
         [SerializeField] private Transform _cameraHolder;
         public Transform CameraHolder => _cameraHolder;
@@ -80,6 +83,9 @@ namespace Entities.Player
 
         [SerializeField] private float _slideAcceleration = 5f;
         public float SlideAcceleration => _slideAcceleration;
+
+        [SerializeField] private float _grindSpeed = 12f;
+        public float GrindSpeed => _grindSpeed;
 
         [Header("Skateboard Settings")]
         [SerializeField] private float _maxSkateboardSpeed = 12f;

@@ -13,6 +13,7 @@ namespace Entities.Player
         Falling,
         Jumping,
         Walled,
+        Railed,
 
         // Movement Sub-States
         Idling,
@@ -57,6 +58,7 @@ namespace Entities.Player
             RegisterState(PlayerStates.Falling, new FallingState(_context, this));
             RegisterState(PlayerStates.Jumping, new JumpingState(_context, this));
             RegisterState(PlayerStates.Walled, new WalledState(_context, this));
+            RegisterState(PlayerStates.Railed, new RailedState(_context, this));
 
             // --- Locomotion States ---
             RegisterState(PlayerStates.Idling, new IdlingState(_context, this));

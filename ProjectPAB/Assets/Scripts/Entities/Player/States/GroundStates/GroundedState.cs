@@ -8,6 +8,7 @@ namespace Entities.Player.States
     public class GroundedState : PlayerBaseState
     {
         private const string GroundCheck = "Ground";
+        private const string RailCheck = "Rail";
         private const string FrontCheck = "Front";
 
         private const float CapsuleHalfHeight = 1f;
@@ -28,6 +29,8 @@ namespace Entities.Player.States
             Ctx.GroundDetector.AddCheck(GroundCheck, Vector3.down, 0.8f, 0, CastType.SphereCast, radius: 0.5f);
 
             Ctx.WallDetector.AddCheck(FrontCheck, Vector3.forward, 0.7f, 0, CastType.Raycast, radius: 0.3f);
+
+            Ctx.RailDetector.AddCheck(RailCheck, Vector3.down, 1f, 0, CastType.SphereCast, radius: 0.35f);
 
             Ctx.GroundDetector.Tick();
             Ctx.WallDetector.Tick();
@@ -52,7 +55,10 @@ namespace Entities.Player.States
             Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
 
             Ctx.GroundDetector.RemoveCheck(GroundCheck);
+
             Ctx.WallDetector.RemoveCheck(FrontCheck);
+
+            Ctx.RailDetector.RemoveCheck(RailCheck);
 
             Ctx.Rigidbody.useGravity = true;
         }
@@ -135,7 +141,7 @@ namespace Entities.Player.States
         {
             if (Factory.HasState(PlayerStates.Falling))
             {
-                if (!Ctx.GroundDetector.HasAnyHit())
+                if (!Ctx.GroundDetector.HasAnyHit() && !Ctx.RailDetector.HasAnyHit())
                 {
                     // Don't count frames during step-up grace period
                     if (Ctx.StepUpGraceTime > 0f)
@@ -154,6 +160,15 @@ namespace Entities.Player.States
                 else
                 {
                     _ungroundedTimer = 0f;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Railed))
+            {
+                if (Ctx.RailDetector.HasAnyHit())
+                {
+                    TrySwitchState(PlayerStates.Railed);
+                    return;
                 }
             }
         }

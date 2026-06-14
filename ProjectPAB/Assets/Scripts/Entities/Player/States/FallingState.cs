@@ -8,6 +8,9 @@ namespace Entities.Player.States
     public class FallingState : PlayerBaseState
     {
         private const string GroundCheck = "Ground";
+
+        private const string RailCheck = "Rail";
+
         private const string FrontCheck = "Front";
         private const string RightCheck = "Right";
         private const string LeftCheck = "Left";
@@ -23,6 +26,8 @@ namespace Entities.Player.States
 
             Ctx.GroundDetector.AddCheck(GroundCheck, Vector3.down, 0.8f, 0, CastType.SphereCast, radius: 0.5f);
 
+            Ctx.RailDetector.AddCheck(RailCheck, Vector3.down, 0.8f, 0, CastType.SphereCast, radius: 0.35f);
+
             Ctx.WallDetector.AddCheck(FrontCheck, Vector3.forward, 0.7f, 0, CastType.SphereCast, radius: 0.3f);
 
             if (Factory.HasState(PlayerStates.WallWalking))
@@ -32,6 +37,7 @@ namespace Entities.Player.States
             }
 
             Ctx.GroundDetector.Tick();
+            Ctx.RailDetector.Tick();
             Ctx.WallDetector.Tick();
         }
 
@@ -40,6 +46,8 @@ namespace Entities.Player.States
             Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
 
             Ctx.GroundDetector.RemoveCheck(GroundCheck);
+
+            Ctx.RailDetector.RemoveCheck(RailCheck);
 
             Ctx.WallDetector.RemoveCheck(FrontCheck);
             Ctx.WallDetector.RemoveCheck(RightCheck);
@@ -85,6 +93,15 @@ namespace Entities.Player.States
 
         public override void CheckSwitchState()
         {
+            if (Factory.HasState(PlayerStates.Railed))
+            {
+                if (Ctx.RailDetector.HasAnyHit())
+                {
+                    TrySwitchState(PlayerStates.Railed);
+                    return;
+                }
+            }
+
             if (Factory.HasState(PlayerStates.Grounded))
             {
                 if (Ctx.GroundDetector.HasAnyHit())

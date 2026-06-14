@@ -396,6 +396,7 @@ GameObject:
   - component: {fileID: 8997811308664197890}
   - component: {fileID: 3991497206129960342}
   - component: {fileID: 5593911470796212968}
+  - component: {fileID: 7911256477993348777}
   - component: {fileID: 474501095859533502}
   - component: {fileID: 1821497253750847027}
   - component: {fileID: 3006045210997315071}
@@ -469,12 +470,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _playerInput: {fileID: 263367864223502240}
-  _moveInput: {x: 0, y: 0}
-  _jumpInput: 0
-  _runInput: 0
-  _mouseInput: {x: 0, y: 0}
-  _shiftInput: 0
-  _shootInput: 0
   _toggleRun: 0
 --- !u!114 &8997811308664197890
 MonoBehaviour:
@@ -500,6 +495,7 @@ MonoBehaviour:
     m_Bits: 1
   _groundDetector: {fileID: 3991497206129960342}
   _wallDetector: {fileID: 5593911470796212968}
+  _railDetector: {fileID: 7911256477993348777}
   _cameraHolder: {fileID: 7043682445114242224}
   _firstPersonAnchor: {fileID: 437285140005243748}
   _cameraSensitivity: 5
@@ -508,6 +504,11 @@ MonoBehaviour:
   _cameraPitchClamp: {x: -40, y: 85}
   _walkSpeed: 5
   _runSpeed: 8
+  _climbSpeed: 7
+  _wallRunSpeed: 10
+  _baseSlideSpeed: 6.5
+  _maxSlideSpeed: 25
+  _slideAcceleration: 1.5
   _maxSkateboardSpeed: 12
   _brakeStrength: 10
   _pushForce: 5
@@ -549,9 +550,29 @@ MonoBehaviour:
   _playerObject: {fileID: 4190587762309374539}
   _wallLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1
   _wallJumpGracePeriod: 0.1
   _originHeight: 0.5
+--- !u!114 &7911256477993348777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5876471315240375162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c73e5ec9566e3a54f91a0efc67d1eaf2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Entities.Player.Detection.RailDetector
+  _railLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  _maxSlopeAngle: 45
+  _originOffset: 0.1
+  _railedGracePeriod: 0.3
+  _coyoteTime: 0.5
+  _coyoteTimeCounter: 0
 --- !u!114 &474501095859533502
 MonoBehaviour:
   m_ObjectHideFlags: 0

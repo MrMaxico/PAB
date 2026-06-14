@@ -7,6 +7,9 @@ namespace Entities.Player.States
     public class WalledState : PlayerBaseState
     {
         private const string GroundCheck = "Ground";
+
+        private const string RailCheck = "Rail";
+
         private const string FrontCheck = "Front";
         private const string RightCheck = "Right";
         private const string LeftCheck = "Left";

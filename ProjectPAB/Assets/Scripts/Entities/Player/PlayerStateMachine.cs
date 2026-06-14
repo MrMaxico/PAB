@@ -43,6 +43,7 @@ namespace Entities.Player
         // Detection proxies
         public GroundDetector GroundDetector => PlayerContext.GroundDetector;
         public WallDetector WallDetector => PlayerContext.WallDetector;
+        public RailDetector RailDetector => PlayerContext.RailDetector;
 
         #region Jump
 
@@ -186,6 +187,7 @@ namespace Entities.Player
 
             GroundDetector.Tick();
             WallDetector.Tick();
+            RailDetector.Tick();
 
             _currentRootState?.FixedUpdateStates();
             _currentContextState?.FixedUpdateStates();
