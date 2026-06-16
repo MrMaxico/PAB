@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Systems.Input;
 using UnityEngine;
 
@@ -29,12 +30,24 @@ namespace Entities.Player.States.Base
         public PlayerBaseState CurrentSuperState => _currentSuperState;
 
         public void SetSuperState(PlayerBaseState superState) => _currentSuperState = superState;
+        public void SetSubState(PlayerBaseState newSubState)
+        {
+            if (newSubState == null) return;
 
-        protected PlayerBaseState _movementSubState;
-        public PlayerBaseState MovementSubState => _movementSubState;
+            PlayerStateType type = newSubState.StateType;
 
-        protected PlayerBaseState _actionSubState;
-        public PlayerBaseState ActionSubState => _actionSubState;
+            if (_subStates.TryGetValue(type, out PlayerBaseState oldState))
+            {
+                oldState.ExitState(newSubState);
+            }
+
+            _subStates[type] = newSubState;
+            newSubState.SetSuperState(this);
+            newSubState.EnterState(oldState);
+        }
+
+        protected Dictionary<PlayerStateType, PlayerBaseState> _subStates = new();
+        public IReadOnlyDictionary<PlayerStateType, PlayerBaseState> SubStates => _subStates;
 
         protected bool _isLocked = false;
         public bool IsLocked => _isLocked;
@@ -51,11 +64,13 @@ namespace Entities.Player.States.Base
 
         public virtual void ExitStates(PlayerBaseState nextState)
         {
-            _movementSubState?.ExitStates(null);
-            _actionSubState?.ExitStates(null);
-
-            _movementSubState = null;
-            _actionSubState = null;
+            foreach (var subState in _subStates.Values)
+            {
+                if (subState.IsLocked)
+                    continue;
+                else
+                    subState.ExitStates(nextState);
+            }
 
             ExitState(nextState);
         }
@@ -64,33 +79,20 @@ namespace Entities.Player.States.Base
         {
             UpdateState();
 
-            if (_movementSubState != null)
+            foreach (var subState in _subStates.Values)
             {
-                if (Factory.GetState(_movementSubState.StateKey) == null)
+                if (subState != null)
                 {
-                    Debug.LogWarning($"<color=red>State {_movementSubState.StateKey} was unregistered while active. Evicting...</color>");
-
-                    _movementSubState.ExitState();
-                    InitializeSubStates();
-                }
-                else
-                {
-                    _movementSubState.UpdateStates();
-                }
-            }
-
-            if (_actionSubState != null)
-            {
-                if (Factory.GetState(_actionSubState.StateKey) == null)
-                {
-                    Debug.LogWarning($"<color=red>State {_actionSubState.StateKey} was unregistered while active. Evicting...</color>");
-
-                    _actionSubState.ExitState();
-                    InitializeSubStates();
-                }
-                else
-                {
-                    _actionSubState.UpdateStates();
+                    if (!Factory.HasState(subState.StateKey))
+                    {
+                        Debug.LogWarning($"<color=red>State {subState.StateKey} was unregistered while active. Evicting...</color>");
+                        subState.ExitState();
+                        InitializeSubStates();
+                    }
+                    else
+                    {
+                        subState.UpdateStates();
+                    }
                 }
             }
         }
@@ -99,36 +101,45 @@ namespace Entities.Player.States.Base
         {
             FixedUpdateState();
 
-            _movementSubState?.FixedUpdateStates();
-            _actionSubState?.FixedUpdateStates();
+            foreach (var subState in _subStates.Values)
+            {
+                subState.FixedUpdateStates();
+            }
         }
 
         public virtual void LateUpdateStates()
         {
             LateUpdateState();
 
-            _movementSubState?.LateUpdateStates();
-            _actionSubState?.LateUpdateStates();
+            foreach (var subState in _subStates.Values)
+            {
+                subState.LateUpdateStates();
+            }
         }
 
         public virtual void CheckSwitchStates()
         {
-            if (!_isLocked)
-                CheckSwitchState();
+            // 1. Create a snapshot to prevent collection modification errors
+            var statesToUpdate = new List<PlayerBaseState>(_subStates.Values);
 
-            if (_movementSubState?.IsLocked != true)
-                _movementSubState?.CheckSwitchStates();
+            // 2. Iterate over the snapshot, not the dictionary
+            foreach (var subState in statesToUpdate)
+            {
+                subState?.CheckSwitchStates();
+            }
 
-            if (_actionSubState?.IsLocked != true)
-                _actionSubState?.CheckSwitchStates();
+            // 3. Check the current state itself
+            CheckSwitchState();
         }
 
         public virtual void InitializeSubStates()
         {
             InitializeSubState();
 
-            _movementSubState?.InitializeSubStates();
-            _actionSubState?.InitializeSubStates();
+            foreach (var subState in _subStates.Values)
+            {
+                subState?.InitializeSubStates();
+            }
         }
 
         public virtual void OnStateEnteredNotification(PlayerBaseState stateEntered)
@@ -137,8 +148,13 @@ namespace Entities.Player.States.Base
 
             _currentSuperState?.OnStateEnteredNotification(stateEntered);
 
-            if (_movementSubState != stateEntered) _movementSubState?.OnStateEnteredNotification(stateEntered);
-            if (_actionSubState != stateEntered) _actionSubState?.OnStateEnteredNotification(stateEntered);
+            foreach (var subState in _subStates.Values)
+            {
+                if (subState != stateEntered)
+                {
+                    subState?.OnStateEnteredNotification(stateEntered);
+                }
+            }
         }
 
         protected void OnStateEntered(PlayerBaseState stateEntered) { }
@@ -149,7 +165,8 @@ namespace Entities.Player.States.Base
 
         public abstract void UpdateState();
         public abstract void FixedUpdateState();
-        public abstract void LateUpdateState();
+
+        public virtual void LateUpdateState() { }
 
         public virtual void InitializeSubState() { }
 
@@ -174,6 +191,9 @@ namespace Entities.Player.States.Base
             PlayerBaseState stateInstance = Factory.GetState(desiredState);
             if (stateInstance == null) return false;
 
+            // maybe needs to be persistent if the state is locked, for when base states switch and a child is locked.
+            if (stateInstance.IsLocked) return false;
+
             if (stateInstance.StateType == PlayerStateType.Root)
             {
                 SwitchRootState(stateInstance);
@@ -195,30 +215,31 @@ namespace Entities.Player.States.Base
             PlayerBaseState stateInstance = Factory.GetState(desiredState);
             if (stateInstance == null) return false;
 
+            // Root switches route upwards
             if (stateInstance.StateType == PlayerStateType.Root)
             {
                 return TrySwitchState(desiredState);
             }
 
-            // Context switches go through the state machine
+            // Context switches route to the state machine level
             if (stateInstance.StateType == PlayerStateType.Context)
             {
                 Ctx.SwitchContextState(desiredState);
                 return true;
             }
 
-            switch (stateInstance.StateType)
+            // Handle all other runtime sub-states dynamically (Movement, Action, etc.)
+            PlayerStateType targetSlot = stateInstance.StateType;
+
+            // Check if this sub-state track is already running the desired state
+            if (_subStates.TryGetValue(targetSlot, out PlayerBaseState currentActiveSubState))
             {
-                case PlayerStateType.Movement:
-                    if (desiredState == _movementSubState?.StateKey) return false;
-                    SwitchMovementSubState(stateInstance);
-                    return true;
-                case PlayerStateType.Action:
-                    if (desiredState == _actionSubState?.StateKey) return false;
-                    SwitchActionSubState(stateInstance);
-                    return true;
+                if (desiredState == currentActiveSubState.StateKey) return false;
             }
-            return false;
+
+            // Perform the state swap dynamically
+            SetSubState(stateInstance);
+            return true;
         }
 
         protected bool TrySwitchRootState(PlayerStates desiredState)
@@ -243,95 +264,69 @@ namespace Entities.Player.States.Base
             newState.EnterState(previousState);
             newState.OnStateEntered(newState);
 
+            // Pass the entire dictionary of active sub-states to the new root state
+            if (_subStates.Count > 0)
+            {
+                newState.InheritSubStates(_subStates);
+                _subStates.Clear();
+            }
+
             newState.InitializeSubState();
         }
 
-        protected void SwitchMovementSubState(PlayerBaseState newMovementState)
+        //protected void SwitchMovementSubState(PlayerBaseState newMovementState)
+        //{
+        //    _movementSubState?.ExitState(newMovementState);
+
+        //    PlayerBaseState previousState = _movementSubState;
+
+        //    _movementSubState = newMovementState;
+        //    newMovementState.SetSuperState(this);
+
+        //    newMovementState.EnterState(previousState);
+        //    newMovementState.OnStateEnteredNotification(newMovementState);
+
+        //    newMovementState.InitializeSubStates();
+        //}
+
+        //protected void SwitchActionSubState(PlayerBaseState newCombatState)
+        //{
+        //    _actionSubState?.ExitState(newCombatState);
+
+        //    PlayerBaseState previousState = _actionSubState;
+
+        //    _actionSubState = newCombatState;
+        //    newCombatState.SetSuperState(this);
+
+        //    newCombatState.EnterState(previousState);
+        //    newCombatState.OnStateEnteredNotification(newCombatState);
+
+        //    newCombatState.InitializeSubStates();
+        //}
+
+        public void InheritSubStates(Dictionary<PlayerStateType, PlayerBaseState> previousSubStates)
         {
-            _movementSubState?.ExitState(newMovementState);
+            foreach (var kvp in previousSubStates)
+            {
+                if (kvp.Key == PlayerStateType.Root || kvp.Key == PlayerStateType.Context) continue;
 
-            PlayerBaseState previousState = _movementSubState;
-
-            _movementSubState = newMovementState;
-            newMovementState.SetSuperState(this);
-
-            newMovementState.EnterState(previousState);
-            newMovementState.OnStateEnteredNotification(newMovementState);
-
-            newMovementState.InitializeSubStates();
-        }
-
-        protected void SwitchActionSubState(PlayerBaseState newCombatState)
-        {
-            _actionSubState?.ExitState(newCombatState);
-
-            PlayerBaseState previousState = _actionSubState;
-
-            _actionSubState = newCombatState;
-            newCombatState.SetSuperState(this);
-
-            newCombatState.EnterState(previousState);
-            newCombatState.OnStateEnteredNotification(newCombatState);
-
-            newCombatState.InitializeSubStates();
+                SetSubState(kvp.Value);
+            }
         }
 
         #endregion
 
         #region InputActions
 
-        protected virtual void HandleJumpInput(IReadOnlyButtonState jumpState) { }
-        public virtual void HandleJumpInputs(IReadOnlyButtonState jumpState)
+        protected virtual void HandleInput(IInputProvider inputProvider) { }
+        public virtual void HandleInputs(IInputProvider inputProvider)
         {
-            HandleJumpInput(jumpState);
+            HandleInput(inputProvider);
 
-            _movementSubState?.HandleJumpInputs(jumpState);
-            _actionSubState?.HandleJumpInputs(jumpState);
-        }
-
-        protected virtual void HandleMoveInput(IReadOnlyMovementInputState movementState) { }
-        public virtual void HandleMoveInputs(IReadOnlyMovementInputState movementState)
-        {
-            HandleMoveInput(movementState);
-
-            _movementSubState?.HandleMoveInputs(movementState);
-            _actionSubState?.HandleMoveInputs(movementState);
-        }
-
-        protected virtual void HandleRunInput(IReadOnlyButtonState isRunning) { }
-        public virtual void HandleRunInputs(IReadOnlyButtonState isRunning)
-        {
-            HandleRunInput(isRunning);
-
-            _movementSubState?.HandleRunInputs(isRunning);
-            _actionSubState?.HandleRunInputs(isRunning);
-        }
-
-        protected virtual void HandleShiftInput(IReadOnlyButtonState shiftingState) { }
-        public virtual void HandleShiftInputs(IReadOnlyButtonState shiftingState)
-        {
-            HandleShiftInput(shiftingState);
-
-            _movementSubState?.HandleShiftInputs(shiftingState);
-            _actionSubState?.HandleShiftInputs(shiftingState);
-        }
-
-        protected virtual void HandleShootInput(IReadOnlyButtonState shootingState) { }
-        public virtual void HandleShootInputs(IReadOnlyButtonState shootingState)
-        {
-            HandleShootInput(shootingState);
-
-            _movementSubState?.HandleShootInputs(shootingState);
-            _actionSubState?.HandleShootInputs(shootingState);
-        }
-
-        protected virtual void HandleSlideInput(IReadOnlyButtonState slidingState) { }
-        public virtual void HandleSlideInputs(IReadOnlyButtonState slidingState)
-        {
-            HandleSlideInput(slidingState);
-
-            _movementSubState?.HandleSlideInputs(slidingState);
-            _actionSubState?.HandleSlideInputs(slidingState);
+            foreach (var subState in _subStates.Values)
+            {
+                subState?.HandleInputs(inputProvider);
+            }
         }
 
         #endregion

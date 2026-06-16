@@ -4,11 +4,12 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class RunningState : MovementBaseState
+    public class RunningState : PlayerBaseState
     {
         public RunningState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.Running;
+            StateType = PlayerStateType.Movement;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -30,17 +31,15 @@ namespace Entities.Player.States
             HandleRunning();
         }
 
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Inputs
 
-        public override void HandleSlideInputs(IReadOnlyButtonState slidingState)
+        protected override void HandleInput(IInputProvider inputProvider)
         {
             if (Factory.HasState(PlayerStates.Sliding))
             {
-                if (slidingState.OnPressed())
+                if (inputProvider.SlideState.OnPressed())
                 {
                     TrySwitchState(PlayerStates.Sliding);
                 }

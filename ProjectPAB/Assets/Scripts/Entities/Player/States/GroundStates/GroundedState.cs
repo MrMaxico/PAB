@@ -20,6 +20,7 @@ namespace Entities.Player.States
         public GroundedState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Grounded;
+            StateType = PlayerStateType.Root;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -89,26 +90,21 @@ namespace Entities.Player.States
             SnapToGround();
         }
 
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Inputs
 
         private Vector2 _currentInput;
 
-        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
+        protected override void HandleInput(IInputProvider inputProvider)
         {
-            _currentInput = movementState.RawInputValue;
-        }
+            _currentInput = inputProvider.MovementState.RawInputValue;
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
-        {
             if (Factory.HasState(PlayerStates.Jumping))
             {
                 if (Ctx.JumpsLeft > 0)
                 {
-                    if (jumpingState.UseBufferedPressOrHold())
+                    if (inputProvider.JumpState.UseBufferedPressOrHold())
                     {
                         TrySwitchState(PlayerStates.Jumping);
                         return;

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class ClimbingState : MovementBaseState
+    public class ClimbingState : PlayerBaseState
     {
         [Header("Ledge Detection Settings")]
         private const float LedgeCheckHeightOffset = 0.5f; // How far above the wall hit to look down
@@ -17,6 +17,7 @@ namespace Entities.Player.States
         public ClimbingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Climbing;
+            StateType = PlayerStateType.Movement;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -82,8 +83,6 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * 15f);
         }
 
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Ledge Calculation
@@ -123,18 +122,15 @@ namespace Entities.Player.States
 
         private Vector2 _climbInput;
 
-        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
+        protected override void HandleInput(IInputProvider inputProvider)
         {
-            _climbInput = movementState.RawInputValue;
-        }
+            _climbInput = inputProvider.MovementState.RawInputValue;
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
-        {
             if (Factory.HasState(PlayerStates.WallLunging))
             {
                 if (Ctx.Stamina > 0)
                 {
-                    if (jumpingState.UseBufferedPress())
+                    if (inputProvider.JumpState.UseBufferedPress())
                     {
                         Vector3 wallNormal = Ctx.WallDetector.WallNormal;
                         Vector3 wallSideDir = Vector3.Cross(wallNormal, Vector3.up);
@@ -150,11 +146,8 @@ namespace Entities.Player.States
                     }
                 }
             }
-        }
 
-        protected override void HandleShiftInput(IReadOnlyButtonState shiftingState)
-        {
-            if (shiftingState.OnPressed())
+            if (inputProvider.ShiftState.OnPressed())
             {
                 if (Factory.HasState(PlayerStates.WallClinging))
                 {

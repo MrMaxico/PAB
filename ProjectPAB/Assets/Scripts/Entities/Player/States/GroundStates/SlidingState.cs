@@ -3,13 +3,14 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class SlidingState : MovementBaseState
+    public class SlidingState : PlayerBaseState
     {
         private float currentSlideSpeed;
 
         public SlidingState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.Sliding;
+            StateType = PlayerStateType.Movement;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -47,8 +48,6 @@ namespace Entities.Player.States
         {
             HandleSliding();
         }
-
-        public override void LateUpdateState() { }
 
         #endregion
 

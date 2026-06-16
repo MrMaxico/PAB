@@ -20,6 +20,7 @@ namespace Entities.Player.States
         public RailedState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Railed;
+            StateType = PlayerStateType.Root;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -37,7 +38,9 @@ namespace Entities.Player.States
 
             if (Ctx.RailDetector.TryGetHit(RailCheck, out var hit))
             {
-                if (hit.collider.TryGetComponent<GrindRail>(out var rail))
+                var rail = hit.collider.GetComponentInParent<GrindRail>();
+
+                if (rail != null)
                 {
                     _currentRail = rail;
                     SnapToRail();
@@ -70,8 +73,6 @@ namespace Entities.Player.States
             HandleRailGrind();
         }
 
-        public override void LateUpdateState() { }
-
         #endregion
 
         private void HandleRailGrind()
@@ -101,8 +102,8 @@ namespace Entities.Player.States
 
             Vector3 lookDir = _grindDirection == 1 ? (Vector3)forward : -(Vector3)forward;
 
-            lookDir = new(lookDir.x, 0f, lookDir.z);
-            Quaternion targetRot = Quaternion.LookRotation(lookDir, Vector3.up);
+            lookDir = new(lookDir.x, lookDir.y, lookDir.z);
+            Quaternion targetRot = Quaternion.LookRotation(lookDir);
             Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, targetRot, 15f * Time.fixedDeltaTime);
         }
 
@@ -148,13 +149,17 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = launchVelocity;
         }
 
-        #region InputHandling
+        #region Inputs
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpState)
+        private Vector3 _moveDir;
+
+        protected override void HandleInput(IInputProvider inputProvider)
         {
+            _moveDir = inputProvider.MovementState.RawInputValue;
+
             if (Factory.HasState(PlayerStates.Jumping))
             {
-                if (jumpState.UseBufferedPressOrHold())
+                if (inputProvider.JumpState.UseBufferedPressOrHold())
                 {
                     Vector3 railForward = Ctx.PlayerObject.forward;
                     railForward.y = 0f;
@@ -183,18 +188,18 @@ namespace Entities.Player.States
             }
         }
 
-        private Vector3 _moveDir;
-
-        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
-        {
-            _moveDir = movementState.RawInputValue;
-        }
-
         #endregion
 
         #region StateLogic
 
-        public override void InitializeSubState() { }
+        public override void InitializeSubState()
+        {
+            if (Factory.HasState(PlayerStates.Idling))
+            {
+                TrySwitchSubState(PlayerStates.Idling);
+                return;
+            }
+        }
 
         public override void CheckSwitchState()
         {

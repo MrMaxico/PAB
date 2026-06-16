@@ -17,6 +17,7 @@ namespace Entities.Player.States
         public JumpingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Jumping;
+            StateType = PlayerStateType.Root;
         }
 
         Rigidbody _rb;
@@ -92,8 +93,6 @@ namespace Entities.Player.States
         }
 
         public override void FixedUpdateState() { }
-
-        public override void LateUpdateState() { }
 
         #endregion
 
