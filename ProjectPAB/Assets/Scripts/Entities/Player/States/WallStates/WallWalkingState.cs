@@ -29,11 +29,6 @@ namespace Entities.Player.States
 
         #region MonoBehaveiours
 
-        public override void UpdateState()
-        {
-
-        }
-
         public override void FixedUpdateState()
         {
             // Gradually align run direction with the wall's current forward
@@ -57,11 +52,11 @@ namespace Entities.Player.States
 
         #region Inputs
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
+        protected override void HandleInputAction(IInputProvider input)
         {
             if (Factory.HasState(PlayerStates.Jumping))
             {
-                if (jumpingState.UseBufferedPress())
+                if (input.JumpState.UseBufferedPress())
                 {
                     Vector3 forceAway = Ctx.WallDetector.WallNormal;
                     Vector3 forceUp = Vector3.up * 1.5f;
@@ -70,6 +65,7 @@ namespace Entities.Player.States
                     Ctx.JumpDirection = (forceAway + forceUp + forceForward).normalized;
 
                     TrySwitchRootState(PlayerStates.Jumping);
+                    return;
                 }
             }
         }

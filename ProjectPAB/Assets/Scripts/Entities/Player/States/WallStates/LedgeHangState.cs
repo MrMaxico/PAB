@@ -23,22 +23,12 @@ namespace Entities.Player.States
 
         #region MonoBehaviours
 
-        public override void UpdateState()
-        {
-
-        }
-
         public override void FixedUpdateState()
         {
             HandleClimbing();
 
             Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.WallNormal, Vector3.up);
             Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, faceWallRotation, Time.fixedDeltaTime * 15f);
-        }
-
-        public override void LateUpdateState()
-        {
-
         }
 
         #endregion
@@ -60,30 +50,26 @@ namespace Entities.Player.States
 
         private Vector2 _climbInput;
 
-        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
+        protected override void HandleInputAction(IInputProvider input)
         {
-            _climbInput = movementState.RawInputValue;
-        }
+            _climbInput = input.MovementState.RawInputValue;
 
-        protected override void HandleShiftInput(IReadOnlyButtonState shiftingState)
-        {
             if (Factory.HasState(PlayerStates.WallClinging))
             {
-                if (shiftingState.OnPressed())
+                if (input.ShiftState.OnPressed())
                 {
-                    TrySwitchState(PlayerStates.WallClinging);
+                    if (TrySwitchState(PlayerStates.WallClinging))
+                        return;
                 }
             }
-        }
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
-        {
             if (Factory.HasState(PlayerStates.ClimbUp))
             {
-                if (jumpingState.OnPressed() && _climbInput.y > 0)
+                if (input.JumpState.OnPressed() && _climbInput.y > 0)
                 {
                     // add check to see if there is standable ground above ledge
-                    TrySwitchState(PlayerStates.ClimbUp);
+                    if (TrySwitchState(PlayerStates.ClimbUp))
+                        return;
                 }
             }
 
@@ -91,7 +77,7 @@ namespace Entities.Player.States
             {
                 if (Ctx.Stamina > 0)
                 {
-                    if (jumpingState.UseBufferedPress() && _climbInput.y < 0)
+                    if (input.JumpState.UseBufferedPress() && _climbInput.y < 0)
                     {
                         Vector3 wallNormal = Ctx.WallDetector.WallNormal;
                         Vector3 wallSideDir = Vector3.Cross(wallNormal, Vector3.up);
@@ -103,17 +89,13 @@ namespace Entities.Player.States
 
                         Ctx.JumpDirection = lungeDir.normalized;
 
-                        TrySwitchState(PlayerStates.WallLunging);
+                        if (TrySwitchState(PlayerStates.WallLunging))
+                            return;
                     }
                 }
             }
         }
 
         #endregion
-
-        public override void CheckSwitchState()
-        {
-
-        }
     }
 }

@@ -215,16 +215,8 @@ namespace Entities.Player
             _isMovementInput = InputProvider.MovementState.RawInputValue.magnitude > _moveThreshold;
             _isRunInput = InputProvider.RunState.RawInputValue;
 
-            _currentRootState.HandleMoveInputs(InputProvider.MovementState);
-            _currentRootState.HandleRunInputs(InputProvider.RunState);
-            _currentRootState.HandleShiftInputs(InputProvider.ShiftState);
-            _currentRootState.HandleSlideInputs(InputProvider.SlideState);
-            _currentRootState.HandleJumpInputs(InputProvider.JumpState);
-
-            _currentContextState?.HandleMoveInputs(InputProvider.MovementState);
-            _currentContextState?.HandleRunInputs(InputProvider.RunState);
-            _currentContextState?.HandleShiftInputs(InputProvider.ShiftState);
-            _currentContextState?.HandleSlideInputs(InputProvider.SlideState);
+            _currentRootState?.HandleInputActions(InputProvider);
+            _currentContextState?.HandleInputActions(InputProvider);
         }
 
         private bool _mStateToggle = false;

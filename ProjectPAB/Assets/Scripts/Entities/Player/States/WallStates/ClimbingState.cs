@@ -82,8 +82,6 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * 15f);
         }
 
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Ledge Calculation
@@ -123,18 +121,15 @@ namespace Entities.Player.States
 
         private Vector2 _climbInput;
 
-        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
+        protected override void HandleInputAction(IInputProvider input)
         {
-            _climbInput = movementState.RawInputValue;
-        }
+            _climbInput = input.MovementState.RawInputValue;
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
-        {
             if (Factory.HasState(PlayerStates.WallLunging))
             {
                 if (Ctx.Stamina > 0)
                 {
-                    if (jumpingState.UseBufferedPress())
+                    if (input.JumpState.UseBufferedPress())
                     {
                         Vector3 wallNormal = Ctx.WallDetector.WallNormal;
                         Vector3 wallSideDir = Vector3.Cross(wallNormal, Vector3.up);
@@ -146,19 +141,18 @@ namespace Entities.Player.States
 
                         Ctx.JumpDirection = lungeDir.normalized;
 
-                        TrySwitchState(PlayerStates.WallLunging);
+                        if (TrySwitchState(PlayerStates.WallLunging))
+                            return;
                     }
                 }
             }
-        }
 
-        protected override void HandleShiftInput(IReadOnlyButtonState shiftingState)
-        {
-            if (shiftingState.OnPressed())
+            if (input.ShiftState.OnPressed())
             {
                 if (Factory.HasState(PlayerStates.WallClinging))
                 {
-                    TrySwitchState(PlayerStates.WallClinging);
+                    if (TrySwitchState(PlayerStates.WallClinging))
+                        return;
                 }
             }
         }
@@ -166,8 +160,6 @@ namespace Entities.Player.States
         #endregion
 
         #region State Logic
-
-        public override void CheckSwitchState() { }
 
         #endregion
     }

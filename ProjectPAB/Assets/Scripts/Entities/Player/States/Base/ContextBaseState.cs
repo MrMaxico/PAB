@@ -143,46 +143,11 @@ namespace Entities.Player.States.Base
 
         #region InputActions
 
-        public override void HandleJumpInputs(IReadOnlyButtonState jumpingState)
+        public override void HandleInputActions(IInputProvider input)
         {
-            HandleJumpInput(jumpingState);
+            HandleInputAction(input);
 
-            _contextSubState?.HandleJumpInputs(jumpingState);
-        }
-
-        public override void HandleMoveInputs(IReadOnlyMovementInputState movementState)
-        {
-            HandleMoveInput(movementState);
-
-            _contextSubState?.HandleMoveInputs(movementState);
-        }
-
-        public override void HandleRunInputs(IReadOnlyButtonState runningState)
-        {
-            HandleRunInput(runningState);
-
-            _contextSubState?.HandleRunInputs(runningState);
-        }
-
-        public override void HandleShiftInputs(IReadOnlyButtonState shiftingState)
-        {
-            HandleShiftInput(shiftingState);
-
-            _contextSubState?.HandleShiftInputs(shiftingState);
-        }
-
-        public override void HandleShootInputs(IReadOnlyButtonState shootingState)
-        {
-            HandleShootInput(shootingState);
-
-            _contextSubState?.HandleShootInputs(shootingState);
-        }
-
-        public override void HandleSlideInputs(IReadOnlyButtonState slidingState)
-        {
-            HandleSlideInput(slidingState);
-
-            _contextSubState?.HandleSlideInputs(slidingState);
+            _contextSubState?.HandleInputActions(input);
         }
 
         #endregion

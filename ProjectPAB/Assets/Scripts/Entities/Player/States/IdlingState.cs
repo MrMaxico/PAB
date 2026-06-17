@@ -25,8 +25,6 @@ namespace Entities.Player.States
 
         #region MonoBehaviours
 
-        public override void UpdateState() { }
-
         public override void FixedUpdateState()
         {
             if (Ctx.GroundDetector.HasAnyHit())
@@ -41,15 +39,13 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(currentVel, targetVel, Time.fixedDeltaTime * decelerationSpeed);
         }
 
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Inputs
 
-        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
+        protected override void HandleInputAction(IInputProvider input)
         {
-            _moveInput = movementState.RawInputValue;
+            _moveInput = input.MovementState.RawInputValue;
         }
 
         #endregion
@@ -62,8 +58,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.IsMovementInput && Ctx.GroundDetector.HasAnyHit())
                 {
-                    TrySwitchState(PlayerStates.Walking);
-                    return;
+                    if (TrySwitchState(PlayerStates.Walking))
+                        return;
                 }
             }
         }

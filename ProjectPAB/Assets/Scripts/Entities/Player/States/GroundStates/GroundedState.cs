@@ -89,29 +89,24 @@ namespace Entities.Player.States
             SnapToGround();
         }
 
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Inputs
 
         private Vector2 _currentInput;
 
-        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
+        protected override void HandleInputAction(IInputProvider input)
         {
-            _currentInput = movementState.RawInputValue;
-        }
+            _currentInput = input.MovementState.RawInputValue;
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
-        {
             if (Factory.HasState(PlayerStates.Jumping))
             {
                 if (Ctx.JumpsLeft > 0)
                 {
-                    if (jumpingState.UseBufferedPressOrHold())
+                    if (input.JumpState.UseBufferedPressOrHold())
                     {
-                        TrySwitchState(PlayerStates.Jumping);
-                        return;
+                        if (TrySwitchState(PlayerStates.Jumping))
+                            return;
                     }
                 }
             }
@@ -125,15 +120,15 @@ namespace Entities.Player.States
             {
                 if (Ctx.IsMovementInput && Ctx.GroundDetector.HasAnyHit())
                 {
-                    TrySwitchSubState(PlayerStates.Walking);
-                    return;
+                    if (TrySwitchSubState(PlayerStates.Walking))
+                        return;
                 }
             }
 
             if (Factory.HasState(PlayerStates.Idling))
             {
-                TrySwitchSubState(PlayerStates.Idling);
-                return;
+                if (TrySwitchSubState(PlayerStates.Idling))
+                    return;
             }
         }
 
@@ -153,8 +148,8 @@ namespace Entities.Player.States
                     _ungroundedTimer += Time.fixedDeltaTime;
                     if (_ungroundedTimer >= UngroundedTolerance)
                     {
-                        TrySwitchState(PlayerStates.Falling);
-                        return;
+                        if (TrySwitchState(PlayerStates.Falling))
+                            return;
                     }
                 }
                 else
@@ -167,8 +162,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.RailDetector.HasAnyHit())
                 {
-                    TrySwitchState(PlayerStates.Railed);
-                    return;
+                    if (TrySwitchState(PlayerStates.Railed))
+                        return;
                 }
             }
         }

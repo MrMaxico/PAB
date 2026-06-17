@@ -56,25 +56,20 @@ namespace Entities.Player.States
 
         #region MonoBehaviours
 
-        public override void UpdateState() { }
-
-        public override void FixedUpdateState() { }
-
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Inputs
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
+        protected override void HandleInputAction(IInputProvider input)
         {
             if (Factory.HasState(PlayerStates.Jumping))
             {
                 if (Ctx.JumpsLeft > 0 && Ctx.GroundDetector.CoyoteTimeCounter > 0)
                 {
-                    if (jumpingState.UseBufferedPress())
+                    if (input.JumpState.UseBufferedPress())
                     {
-                        TrySwitchState(PlayerStates.Jumping);
+                        if (TrySwitchState(PlayerStates.Jumping))
+                            return;
                     }
                 }
             }
@@ -86,8 +81,8 @@ namespace Entities.Player.States
         {
             if (Factory.HasState(PlayerStates.Idling))
             {
-                TrySwitchSubState(PlayerStates.Idling);
-                return;
+                if (TrySwitchSubState(PlayerStates.Idling))
+                    return;
             }
         }
 
@@ -97,8 +92,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.RailDetector.HasAnyHit())
                 {
-                    TrySwitchState(PlayerStates.Railed);
-                    return;
+                    if (TrySwitchState(PlayerStates.Railed))
+                        return;
                 }
             }
 
@@ -106,8 +101,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.GroundDetector.HasAnyHit())
                 {
-                    TrySwitchState(PlayerStates.Grounded);
-                    return;
+                    if (TrySwitchState(PlayerStates.Grounded))
+                        return;
                 }
             }
 
@@ -115,8 +110,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.WallDetector.HasAnyHit())
                 {
-                    TrySwitchState(PlayerStates.Walled);
-                    return;
+                    if (TrySwitchState(PlayerStates.Walled))
+                        return;
                 }
             }
         }

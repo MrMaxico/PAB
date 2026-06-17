@@ -50,44 +50,34 @@ namespace Entities.Player.States
             }
         }
 
-        public override void FixedUpdateState() { }
-
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Inputs
 
-        protected override void HandleShiftInput(IReadOnlyButtonState shiftingState)
+        protected override void HandleInputAction(IInputProvider input)
         {
             if (Factory.HasState(PlayerStates.Climbing))
             {
                 if (Ctx.Stamina > 0)
                 {
-                    if (shiftingState.OnReleased())
+                    if (input.ShiftState.OnReleased())
                     {
-                        TrySwitchState(PlayerStates.Climbing);
+                        if (TrySwitchState(PlayerStates.Climbing))
+                            return;
                     }
                 }
             }
-        }
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
-        {
             if (Factory.HasState(PlayerStates.Jumping))
             {
-                if (jumpingState.UseBufferedPress())
+                if (input.JumpState.UseBufferedPress())
                 {
-                    TrySwitchRootState(PlayerStates.Jumping);
+                    if (TrySwitchRootState(PlayerStates.Jumping))
+                        return;
                 }
             }
         }
 
         #endregion
-
-        public override void CheckSwitchState()
-        {
-
-        }
     }
 }

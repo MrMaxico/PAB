@@ -58,19 +58,12 @@ namespace Entities.Player.States
 
         #region MonoBehaveiours
 
-        public override void UpdateState()
-        {
-            CheckSwitchState();
-        }
-
         public override void FixedUpdateState()
         {
             if (_currentRail == null) return;
 
             HandleRailGrind();
         }
-
-        public override void LateUpdateState() { }
 
         #endregion
 
@@ -150,11 +143,15 @@ namespace Entities.Player.States
 
         #region InputHandling
 
-        protected override void HandleJumpInput(IReadOnlyButtonState jumpState)
+        private Vector3 _moveDir;
+
+        protected override void HandleInputAction(IInputProvider input)
         {
+            _moveDir = input.MovementState.RawInputValue;
+
             if (Factory.HasState(PlayerStates.Jumping))
             {
-                if (jumpState.UseBufferedPressOrHold())
+                if (input.JumpState.UseBufferedPressOrHold())
                 {
                     Vector3 railForward = Ctx.PlayerObject.forward;
                     railForward.y = 0f;
@@ -178,23 +175,15 @@ namespace Entities.Player.States
 
                     Ctx.JumpDirection = finalDirection;
 
-                    TrySwitchState(PlayerStates.Jumping);
+                    if (TrySwitchState(PlayerStates.Jumping))
+                        return;
                 }
             }
-        }
-
-        private Vector3 _moveDir;
-
-        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
-        {
-            _moveDir = movementState.RawInputValue;
         }
 
         #endregion
 
         #region StateLogic
-
-        public override void InitializeSubState() { }
 
         public override void CheckSwitchState()
         {
@@ -203,7 +192,8 @@ namespace Entities.Player.States
                 if (Ctx.GroundDetector.HasAnyHit() && (!Ctx.RailDetector.HasAnyHit() || _currentRail == null))
                 {
                     Debug.Log("switch to grounded");
-                    TrySwitchState(PlayerStates.Grounded);
+                    if (TrySwitchState(PlayerStates.Grounded))
+                        return;
                 }
             }
 
@@ -212,7 +202,8 @@ namespace Entities.Player.States
                 if (_currentRail == null && !Ctx.GroundDetector.HasAnyHit() || !Ctx.RailDetector.HasAnyHit() && !Ctx.GroundDetector.HasAnyHit())
                 {
                     Debug.Log("switch to falling");
-                    TrySwitchState(PlayerStates.Falling);
+                    if (TrySwitchState(PlayerStates.Falling))
+                        return;
                 }
             }
         }

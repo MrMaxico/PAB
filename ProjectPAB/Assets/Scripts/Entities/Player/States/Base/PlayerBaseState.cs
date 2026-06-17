@@ -147,16 +147,15 @@ namespace Entities.Player.States.Base
 
         #region Abstract Functions
 
-        public abstract void UpdateState();
-        public abstract void FixedUpdateState();
-        public abstract void LateUpdateState();
-
-        public virtual void InitializeSubState() { }
+        public virtual void UpdateState() { }
+        public virtual void FixedUpdateState() { }
+        public virtual void LateUpdateState() { }
 
         public abstract void EnterState(PlayerBaseState previousState = null);
         public abstract void ExitState(PlayerBaseState nextState = null);
 
-        public abstract void CheckSwitchState();
+        public virtual void InitializeSubState() { }
+        public virtual void CheckSwitchState() { }
 
         #endregion
 
@@ -280,58 +279,12 @@ namespace Entities.Player.States.Base
 
         #region InputActions
 
-        protected virtual void HandleJumpInput(IReadOnlyButtonState jumpState) { }
-        public virtual void HandleJumpInputs(IReadOnlyButtonState jumpState)
+        protected virtual void HandleInputAction(IInputProvider input) { }
+        public virtual void HandleInputActions(IInputProvider input)
         {
-            HandleJumpInput(jumpState);
-
-            _movementSubState?.HandleJumpInputs(jumpState);
-            _actionSubState?.HandleJumpInputs(jumpState);
-        }
-
-        protected virtual void HandleMoveInput(IReadOnlyMovementInputState movementState) { }
-        public virtual void HandleMoveInputs(IReadOnlyMovementInputState movementState)
-        {
-            HandleMoveInput(movementState);
-
-            _movementSubState?.HandleMoveInputs(movementState);
-            _actionSubState?.HandleMoveInputs(movementState);
-        }
-
-        protected virtual void HandleRunInput(IReadOnlyButtonState isRunning) { }
-        public virtual void HandleRunInputs(IReadOnlyButtonState isRunning)
-        {
-            HandleRunInput(isRunning);
-
-            _movementSubState?.HandleRunInputs(isRunning);
-            _actionSubState?.HandleRunInputs(isRunning);
-        }
-
-        protected virtual void HandleShiftInput(IReadOnlyButtonState shiftingState) { }
-        public virtual void HandleShiftInputs(IReadOnlyButtonState shiftingState)
-        {
-            HandleShiftInput(shiftingState);
-
-            _movementSubState?.HandleShiftInputs(shiftingState);
-            _actionSubState?.HandleShiftInputs(shiftingState);
-        }
-
-        protected virtual void HandleShootInput(IReadOnlyButtonState shootingState) { }
-        public virtual void HandleShootInputs(IReadOnlyButtonState shootingState)
-        {
-            HandleShootInput(shootingState);
-
-            _movementSubState?.HandleShootInputs(shootingState);
-            _actionSubState?.HandleShootInputs(shootingState);
-        }
-
-        protected virtual void HandleSlideInput(IReadOnlyButtonState slidingState) { }
-        public virtual void HandleSlideInputs(IReadOnlyButtonState slidingState)
-        {
-            HandleSlideInput(slidingState);
-
-            _movementSubState?.HandleSlideInputs(slidingState);
-            _actionSubState?.HandleSlideInputs(slidingState);
+            HandleInputAction(input);
+            _movementSubState?.HandleInputActions(input);
+            _actionSubState?.HandleInputActions(input);
         }
 
         #endregion

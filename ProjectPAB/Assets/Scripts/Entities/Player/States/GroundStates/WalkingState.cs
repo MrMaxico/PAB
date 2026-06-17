@@ -62,19 +62,18 @@ namespace Entities.Player.States
             }
         }
 
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Inputs
 
-        public override void HandleSlideInputs(IReadOnlyButtonState slidingState)
+        protected override void HandleInputAction(IInputProvider input)
         {
             if (Factory.HasState(PlayerStates.Sliding))
             {
-                if (slidingState.OnPressed())
+                if (input.SlideState.OnPressed())
                 {
-                    TrySwitchState(PlayerStates.Sliding);
+                    if (TrySwitchState(PlayerStates.Sliding))
+                        return;
                 }
             }
         }
@@ -158,8 +157,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.IsMovementInput && Ctx.IsRunInput && Ctx.GroundDetector.HasAnyHit())
                 {
-                    TrySwitchState(PlayerStates.Running);
-                    return;
+                    if (TrySwitchState(PlayerStates.Running))
+                        return;
                 }
             }
 
@@ -167,8 +166,8 @@ namespace Entities.Player.States
             {
                 if (!Ctx.IsMovementInput)
                 {
-                    TrySwitchState(PlayerStates.Idling);
-                    return;
+                    if (TrySwitchState(PlayerStates.Idling))
+                        return;
                 }
             }
         }

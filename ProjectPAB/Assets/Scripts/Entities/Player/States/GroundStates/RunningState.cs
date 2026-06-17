@@ -23,26 +23,23 @@ namespace Entities.Player.States
 
         #region MonoBehaveiours
 
-        public override void UpdateState() { }
-
         public override void FixedUpdateState()
         {
             HandleRunning();
         }
 
-        public override void LateUpdateState() { }
-
         #endregion
 
         #region Inputs
 
-        public override void HandleSlideInputs(IReadOnlyButtonState slidingState)
+        protected override void HandleInputAction(IInputProvider input)
         {
             if (Factory.HasState(PlayerStates.Sliding))
             {
-                if (slidingState.OnPressed())
+                if (input.SlideState.OnPressed())
                 {
-                    TrySwitchState(PlayerStates.Sliding);
+                    if (TrySwitchState(PlayerStates.Sliding))
+                        return;
                 }
             }
         }
@@ -77,7 +74,8 @@ namespace Entities.Player.States
             {
                 if (!Ctx.IsRunInput)
                 {
-                    TrySwitchState(PlayerStates.Walking);
+                    if (TrySwitchState(PlayerStates.Walking))
+                        return;
                 }
             }
 
@@ -85,7 +83,8 @@ namespace Entities.Player.States
             {
                 if (!Ctx.IsMovementInput)
                 {
-                    TrySwitchState(PlayerStates.Idling);
+                    if (TrySwitchState(PlayerStates.Idling))
+                        return;
                 }
             }
         }
