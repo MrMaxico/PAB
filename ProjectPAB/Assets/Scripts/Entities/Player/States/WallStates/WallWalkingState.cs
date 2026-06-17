@@ -4,12 +4,11 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class WallWalkingState : PlayerBaseState
+    public class WallWalkingState : MovementBaseState
     {
         public WallWalkingState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.WallWalking;
-            StateType = PlayerStateType.Movement;
         }
 
         /// <summary>Locked on enter — which direction along the wall we run.</summary>
@@ -52,15 +51,17 @@ namespace Entities.Player.States
             }
         }
 
+        public override void LateUpdateState() { }
+
         #endregion
 
         #region Inputs
 
-        protected override void HandleInput(IInputProvider inputProvider)
+        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
         {
             if (Factory.HasState(PlayerStates.Jumping))
             {
-                if (inputProvider.JumpState.UseBufferedPress())
+                if (jumpingState.UseBufferedPress())
                 {
                     Vector3 forceAway = Ctx.WallDetector.WallNormal;
                     Vector3 forceUp = Vector3.up * 1.5f;

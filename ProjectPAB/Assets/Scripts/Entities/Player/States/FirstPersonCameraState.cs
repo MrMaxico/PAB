@@ -15,7 +15,6 @@ namespace Entities.Player.States
         public FirstPersonCameraState(PlayerStateMachine ctx, PlayerStateFactory factory) : base(ctx, factory)
         {
             StateKey = PlayerStates.FirstPersonCamera;
-            StateType = PlayerStateType.Context;
         }
 
         public override void EnterState(PlayerBaseState previousState)

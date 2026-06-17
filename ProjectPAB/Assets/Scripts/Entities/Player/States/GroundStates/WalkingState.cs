@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class WalkingState : PlayerBaseState
+    public class WalkingState : MovementBaseState
     {
         // Step-up settings
         private const float MaxStepHeight = 0.4f;
@@ -17,7 +17,6 @@ namespace Entities.Player.States
         public WalkingState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.Walking;
-            StateType = PlayerStateType.Movement;
         }
 
         private Vector2 _moveInput;
@@ -63,15 +62,17 @@ namespace Entities.Player.States
             }
         }
 
+        public override void LateUpdateState() { }
+
         #endregion
 
         #region Inputs
 
-        protected override void HandleInput(IInputProvider inputProvider)
+        public override void HandleSlideInputs(IReadOnlyButtonState slidingState)
         {
             if (Factory.HasState(PlayerStates.Sliding))
             {
-                if (inputProvider.SlideState.OnPressed())
+                if (slidingState.OnPressed())
                 {
                     TrySwitchState(PlayerStates.Sliding);
                 }

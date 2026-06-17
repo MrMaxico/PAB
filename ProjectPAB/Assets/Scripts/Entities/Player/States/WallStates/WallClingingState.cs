@@ -4,12 +4,11 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class WallClingingState : PlayerBaseState
+    public class WallClingingState : MovementBaseState
     {
         public WallClingingState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.WallClinging;
-            StateType = PlayerStateType.Movement;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -53,28 +52,33 @@ namespace Entities.Player.States
 
         public override void FixedUpdateState() { }
 
+        public override void LateUpdateState() { }
+
         #endregion
 
         #region Inputs
 
-        protected override void HandleInput(IInputProvider inputProvider)
+        protected override void HandleShiftInput(IReadOnlyButtonState shiftingState)
         {
-            if (Factory.HasState(PlayerStates.Jumping))
-            {
-                if (inputProvider.JumpState.UseBufferedPress())
-                {
-                    TrySwitchRootState(PlayerStates.Jumping);
-                }
-            }
-
             if (Factory.HasState(PlayerStates.Climbing))
             {
                 if (Ctx.Stamina > 0)
                 {
-                    if (inputProvider.ShiftState.OnReleased())
+                    if (shiftingState.OnReleased())
                     {
                         TrySwitchState(PlayerStates.Climbing);
                     }
+                }
+            }
+        }
+
+        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
+        {
+            if (Factory.HasState(PlayerStates.Jumping))
+            {
+                if (jumpingState.UseBufferedPress())
+                {
+                    TrySwitchRootState(PlayerStates.Jumping);
                 }
             }
         }

@@ -1,14 +1,16 @@
 using Entities.Player.States.Base;
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class IdlingState : PlayerBaseState
+    public class IdlingState : MovementBaseState
     {
+        private Vector2 _moveInput;
+
         public IdlingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Idling;
-            StateType = PlayerStateType.Movement;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -39,9 +41,16 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(currentVel, targetVel, Time.fixedDeltaTime * decelerationSpeed);
         }
 
+        public override void LateUpdateState() { }
+
         #endregion
 
         #region Inputs
+
+        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
+        {
+            _moveInput = movementState.RawInputValue;
+        }
 
         #endregion
 
@@ -51,7 +60,7 @@ namespace Entities.Player.States
         {
             if (Factory.HasState(PlayerStates.Walking))
             {
-                if (_currentSuperState.StateKey == PlayerStates.Grounded && Ctx.IsMovementInput)
+                if (Ctx.IsMovementInput && Ctx.GroundDetector.HasAnyHit())
                 {
                     TrySwitchState(PlayerStates.Walking);
                     return;

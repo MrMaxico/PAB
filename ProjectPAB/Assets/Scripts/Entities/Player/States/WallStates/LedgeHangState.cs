@@ -4,12 +4,11 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class LedgeHangState : PlayerBaseState
+    public class LedgeHangState : MovementBaseState
     {
         public LedgeHangState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.LedgeHanging;
-            StateType = PlayerStateType.Movement;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -37,6 +36,11 @@ namespace Entities.Player.States
             Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, faceWallRotation, Time.fixedDeltaTime * 15f);
         }
 
+        public override void LateUpdateState()
+        {
+
+        }
+
         #endregion
 
         private void HandleClimbing()
@@ -56,21 +60,27 @@ namespace Entities.Player.States
 
         private Vector2 _climbInput;
 
-        protected override void HandleInput(IInputProvider inputProvider)
+        protected override void HandleMoveInput(IReadOnlyMovementInputState movementState)
         {
-            _climbInput = inputProvider.MovementState.RawInputValue;
+            _climbInput = movementState.RawInputValue;
+        }
 
+        protected override void HandleShiftInput(IReadOnlyButtonState shiftingState)
+        {
             if (Factory.HasState(PlayerStates.WallClinging))
             {
-                if (inputProvider.ShiftState.OnPressed())
+                if (shiftingState.OnPressed())
                 {
                     TrySwitchState(PlayerStates.WallClinging);
                 }
             }
+        }
 
+        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
+        {
             if (Factory.HasState(PlayerStates.ClimbUp))
             {
-                if (inputProvider.JumpState.OnPressed() && _climbInput.y > 0)
+                if (jumpingState.OnPressed() && _climbInput.y > 0)
                 {
                     // add check to see if there is standable ground above ledge
                     TrySwitchState(PlayerStates.ClimbUp);
@@ -81,7 +91,7 @@ namespace Entities.Player.States
             {
                 if (Ctx.Stamina > 0)
                 {
-                    if (inputProvider.JumpState.UseBufferedPress() && _climbInput.y < 0)
+                    if (jumpingState.UseBufferedPress() && _climbInput.y < 0)
                     {
                         Vector3 wallNormal = Ctx.WallDetector.WallNormal;
                         Vector3 wallSideDir = Vector3.Cross(wallNormal, Vector3.up);

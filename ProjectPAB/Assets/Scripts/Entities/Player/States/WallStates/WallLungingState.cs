@@ -3,12 +3,11 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class WallLungingState : PlayerBaseState
+    public class WallLungingState : MovementBaseState
     {
         public WallLungingState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.WallLunging;
-            StateType = PlayerStateType.Movement;
         }
 
         private Rigidbody _rb;
@@ -42,7 +41,15 @@ namespace Entities.Player.States
             Ctx.JumpToWalledTime -= Time.deltaTime;
         }
 
-        public override void FixedUpdateState() { }
+        public override void FixedUpdateState()
+        {
+
+        }
+
+        public override void LateUpdateState()
+        {
+
+        }
 
         #endregion
 

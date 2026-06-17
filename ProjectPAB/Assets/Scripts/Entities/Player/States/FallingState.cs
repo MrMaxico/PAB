@@ -18,7 +18,6 @@ namespace Entities.Player.States
         public FallingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Falling;
-            StateType = PlayerStateType.Root;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -61,17 +60,19 @@ namespace Entities.Player.States
 
         public override void FixedUpdateState() { }
 
+        public override void LateUpdateState() { }
+
         #endregion
 
         #region Inputs
 
-        protected override void HandleInput(IInputProvider inputProvider)
+        protected override void HandleJumpInput(IReadOnlyButtonState jumpingState)
         {
             if (Factory.HasState(PlayerStates.Jumping))
             {
                 if (Ctx.JumpsLeft > 0 && Ctx.GroundDetector.CoyoteTimeCounter > 0)
                 {
-                    if (inputProvider.JumpState.UseBufferedPress())
+                    if (jumpingState.UseBufferedPress())
                     {
                         TrySwitchState(PlayerStates.Jumping);
                     }

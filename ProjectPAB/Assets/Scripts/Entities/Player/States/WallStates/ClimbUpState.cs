@@ -3,12 +3,11 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class ClimbUpState : PlayerBaseState
+    public class ClimbUpState : MovementBaseState
     {
         public ClimbUpState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.ClimbUp;
-            StateType = PlayerStateType.Movement;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -30,7 +29,15 @@ namespace Entities.Player.States
             Ctx.transform.position = Ctx.WallDetector.WallHit.point + Vector3.up * 1.5f;
         }
 
-        public override void FixedUpdateState() { }
+        public override void FixedUpdateState()
+        {
+
+        }
+
+        public override void LateUpdateState()
+        {
+
+        }
 
         #endregion
 

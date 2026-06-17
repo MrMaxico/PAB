@@ -1,6 +1,5 @@
 using Entities.Player.Detection;
 using Entities.Player.States.Base;
-using System.Collections.Generic;
 using Systems.Input;
 using UnityEngine;
 using UnityEngine.UI;
@@ -51,7 +50,6 @@ namespace Entities.Player
         [Header("Jump")]
         [SerializeField] private int _maxJumps = 1;
         public int JumpsLeft => _maxJumps - _jumpsUsed;
-
         private int _jumpsUsed;
         public int JumpsUsed
         {
@@ -98,19 +96,13 @@ namespace Entities.Player
 
         public Vector3 JumpDirection { get; set; }
 
-        #endregion
+        [SerializeField] private float _jumpBufferTime = 0.15f;
+        [SerializeField] private float _jumpReleaseTime = 0.1f;
 
-        #region Dive
-
-        [SerializeField] private int _maxDives = 1;
-        public int DashesLeft => _maxDives - _divesUsed;
-
-        private int _divesUsed = 0;
-        public int DashesUsed
-        {
-            get => _divesUsed;
-            set => _divesUsed = Mathf.Clamp(value, 0, _maxDives);
-        }
+        private bool _jumpBuffered;
+        private float _lastJumpPressedTime;
+        private bool _jumpHeld;
+        private bool _jumpLock;
 
         #endregion
 
@@ -223,8 +215,16 @@ namespace Entities.Player
             _isMovementInput = InputProvider.MovementState.RawInputValue.magnitude > _moveThreshold;
             _isRunInput = InputProvider.RunState.RawInputValue;
 
-            _currentRootState.HandleInputs(InputProvider);
-            _currentContextState?.HandleInputs(InputProvider);
+            _currentRootState.HandleMoveInputs(InputProvider.MovementState);
+            _currentRootState.HandleRunInputs(InputProvider.RunState);
+            _currentRootState.HandleShiftInputs(InputProvider.ShiftState);
+            _currentRootState.HandleSlideInputs(InputProvider.SlideState);
+            _currentRootState.HandleJumpInputs(InputProvider.JumpState);
+
+            _currentContextState?.HandleMoveInputs(InputProvider.MovementState);
+            _currentContextState?.HandleRunInputs(InputProvider.RunState);
+            _currentContextState?.HandleShiftInputs(InputProvider.ShiftState);
+            _currentContextState?.HandleSlideInputs(InputProvider.SlideState);
         }
 
         private bool _mStateToggle = false;
@@ -236,21 +236,10 @@ namespace Entities.Player
             PlayerBaseState previousState = _currentRootState;
             PlayerBaseState nextStateInstance = _stateFactory.GetState(nextState);
 
-            if (previousState != null)
-            {
-                previousState.ExitStates(nextStateInstance);
-
-                if (previousState.SubStates.Count > 0)
-                {
-                    nextStateInstance.InheritSubStates(new Dictionary<PlayerStateType, PlayerBaseState>(previousState.SubStates));
-                }
-            }
+            _currentRootState?.ExitStates(nextStateInstance);
 
             _currentRootState = nextStateInstance;
             _currentRootState.EnterState(previousState);
-
-            // Crucial: Call InitializeSubState so the new state checks if it inherited something!
-            _currentRootState.InitializeSubState();
         }
 
         /// <summary>

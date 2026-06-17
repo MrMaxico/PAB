@@ -20,7 +20,6 @@ namespace Entities.Player
         Walking,
         Running,
         Sliding,
-        Diving,
 
         // Specialized Movement
         Climbing,

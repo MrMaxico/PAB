@@ -18,7 +18,6 @@ namespace Entities.Player.States
         public WalledState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Walled;
-            StateType = PlayerStateType.Root;
         }
 
         public override void EnterState(PlayerBaseState previousState)
@@ -83,6 +82,8 @@ namespace Entities.Player.States
             Vector3 correctionForce = -Ctx.WallDetector.WallNormal * (distanceError * forceStrength);
             Ctx.Rigidbody.AddForce(correctionForce, ForceMode.Acceleration);
         }
+
+        public override void LateUpdateState() { }
 
         #endregion
 
