@@ -73,6 +73,15 @@ namespace Entities.Player.States
                     }
                 }
             }
+
+            if (Factory.HasState(PlayerStates.Diving))
+            {
+                if (input.DiveState.IsPressed)
+                {
+                    if (TrySwitchState(PlayerStates.Diving))
+                        return;
+                }
+            }
         }
 
         #endregion

@@ -1,3 +1,4 @@
+using Entities.Player.Detection;
 using Entities.Player.States.Base;
 using Systems.Input;
 using UnityEngine;
@@ -6,6 +7,9 @@ namespace Entities.Player.States
 {
     public class WallWalkingState : MovementBaseState
     {
+        private const string RightCheck = "Right";
+        private const string LeftCheck = "Left";
+
         public WallWalkingState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.WallWalking;
@@ -19,6 +23,15 @@ namespace Entities.Player.States
             Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 
             // Lock the run direction based on which side of the wall we hit
+            WalledState wall = (WalledState)CurrentSuperState;
+
+            if (wall.WallWalkSideRightLeft)
+                Ctx.WallDetector.AddCheck(RightCheck, Vector3.right, 0.8f, 1, CastType.Raycast);
+            else
+                Ctx.WallDetector.AddCheck(LeftCheck, Vector3.left, 0.8f, 2, CastType.Raycast);
+
+            Ctx.WallDetector.Tick();
+
             _runDirection = Ctx.WallDetector.WallForward;
         }
 

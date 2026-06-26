@@ -186,7 +186,7 @@ namespace Entities.Player
                 _stepUpGraceTime -= Time.fixedDeltaTime;
 
             GroundDetector.Tick();
-            WallDetector.Tick();
+            WallDetector.Tick(MoveDirection);
             RailDetector.Tick();
 
             _currentRootState?.FixedUpdateStates();

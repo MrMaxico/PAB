@@ -103,7 +103,7 @@ namespace Entities.Player.States
         {
             _splineLength = _currentRail.Container.CalculateLength();
 
-            NativeSpline worldSpline = new NativeSpline(_currentRail.Spline, _currentRail.transform.localToWorldMatrix);
+            NativeSpline worldSpline = new(_currentRail.Spline, _currentRail.transform.localToWorldMatrix);
             SplineUtility.GetNearestPoint(worldSpline, Ctx.transform.position, out float3 worldNearestPos, out float t);
             _splineProgress = t;
 
@@ -123,7 +123,7 @@ namespace Entities.Player.States
 
         private void DetachFromRail()
         {
-            NativeSpline worldSpline = new NativeSpline(_currentRail.Spline, _currentRail.transform.localToWorldMatrix);
+            NativeSpline worldSpline = new(_currentRail.Spline, _currentRail.transform.localToWorldMatrix);
 
             float tExit = _grindDirection == 1 ? 1f : 0f;
             float tBehind = _grindDirection == 1 ? 0.95f : 0.05f;
@@ -191,7 +191,6 @@ namespace Entities.Player.States
             {
                 if (Ctx.GroundDetector.HasAnyHit() && (!Ctx.RailDetector.HasAnyHit() || _currentRail == null))
                 {
-                    Debug.Log("switch to grounded");
                     if (TrySwitchState(PlayerStates.Grounded))
                         return;
                 }
@@ -201,7 +200,6 @@ namespace Entities.Player.States
             {
                 if (_currentRail == null && !Ctx.GroundDetector.HasAnyHit() || !Ctx.RailDetector.HasAnyHit() && !Ctx.GroundDetector.HasAnyHit())
                 {
-                    Debug.Log("switch to falling");
                     if (TrySwitchState(PlayerStates.Falling))
                         return;
                 }

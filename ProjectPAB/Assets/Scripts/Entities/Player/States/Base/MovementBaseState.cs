@@ -14,6 +14,12 @@ namespace Entities.Player.States.Base
 
         public override void ExitStates(PlayerBaseState nextState)
         {
+            if (IsLocked)
+            {
+                Debug.LogWarning($"<color=red>Attempted to exit state {StateKey} while locked. Ignoring...</color>");
+                return;
+            }
+
             _movementSubState?.ExitStates(null);
 
             _movementSubState = null;
@@ -74,6 +80,8 @@ namespace Entities.Player.States.Base
         public override void OnStateEnteredNotification(PlayerBaseState stateEntered)
         {
             OnStateEntered(stateEntered);
+
+            _currentSuperState?.OnStateEnteredNotification(stateEntered);
 
             if (_movementSubState != stateEntered) _movementSubState?.OnStateEnteredNotification(stateEntered);
         }

@@ -1,3 +1,4 @@
+using Entities.Player.Detection;
 using Entities.Player.States.Base;
 using Systems.Input;
 using UnityEngine;
@@ -14,6 +15,8 @@ namespace Entities.Player.States
         private bool _hasLedge;
         private Vector3 _ledgePoint;
 
+        private const string MoveCheck = "Move";
+
         public ClimbingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Climbing;
@@ -29,11 +32,15 @@ namespace Entities.Player.States
 
             Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.WallNormal, Vector3.up);
             Ctx.PlayerObject.rotation = Quaternion.Euler(faceWallRotation.eulerAngles.x, faceWallRotation.eulerAngles.y, 0);
+
+            Ctx.WallDetector.AddMovementCheck(MoveCheck, 0.9f, 0, CastType.SphereCast, radius: 0.3f);
         }
 
         public override void ExitState(PlayerBaseState nextState)
         {
             Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+
+            Ctx.WallDetector.RemoveCheck(MoveCheck);
         }
 
         #region MonoBehaviours
@@ -44,42 +51,37 @@ namespace Entities.Player.States
             {
                 Ctx.Stamina -= Time.deltaTime * 10f;
             }
-            else if (Factory.HasState(PlayerStates.WallClinging))
-            {
-                TrySwitchState(PlayerStates.WallClinging);
-                return;
-            }
 
             // ─── Inline Ledge Detection ───
-            if (EvaluateLedgeDetection())
-            {
-                if (Factory.HasState(PlayerStates.LedgeHanging))
-                {
-                    TrySwitchState(PlayerStates.LedgeHanging);
-                    return;
-                }
-            }
+
         }
 
         public override void FixedUpdateState()
         {
             HandleClimbing();
-
-            Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.WallNormal, Vector3.up);
-            Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, faceWallRotation, Time.fixedDeltaTime * 15f);
         }
 
         private void HandleClimbing()
         {
-            Vector3 wallNormal = Ctx.WallDetector.WallNormal;
-            Vector3 wallSideDir = Vector3.Cross(wallNormal, Vector3.up).normalized;
-            Vector3 wallUpDir = Vector3.Cross(wallSideDir, wallNormal).normalized;
+            Vector3 activeWallNormal = Ctx.WallDetector.WallNormal;
+            Vector3 activeWallPoint = Ctx.WallDetector.WallHit.point;
+
+            if (Ctx.MoveDirection != Vector3.zero && Ctx.WallDetector.TryGetHit("Move", out RaycastHit moveHit))
+            {
+                activeWallNormal = moveHit.normal;
+                activeWallPoint = moveHit.point;
+            }
+
+            Vector3 wallSideDir = Vector3.Cross(activeWallNormal, Vector3.up).normalized;
+            Vector3 wallUpDir = Vector3.Cross(wallSideDir, activeWallNormal).normalized;
 
             Ctx.MoveDirection = (wallUpDir * _climbInput.y) + (wallSideDir * _climbInput.x);
-
             Vector3 targetVelocity = Ctx.MoveDirection * Ctx.PlayerContext.ClimbSpeed;
 
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * 15f);
+
+            Quaternion faceWallRotation = Quaternion.LookRotation(-activeWallNormal, Vector3.up);
+            Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, faceWallRotation, Time.fixedDeltaTime * 15f);
         }
 
         #endregion
@@ -99,7 +101,7 @@ namespace Entities.Player.States
                                    + (Vector3.up * LedgeCheckHeightOffset)
                                    + (wallLookDirection * LedgeCheckForwardOffset);
 
-            Ray downRay = new Ray(downRayStart, Vector3.down);
+            Ray downRay = new(downRayStart, Vector3.down);
 
             LayerMask wallLayer = Ctx.WallDetector.WallHit.collider.gameObject.layer;
 
@@ -160,6 +162,27 @@ namespace Entities.Player.States
         #endregion
 
         #region State Logic
+
+        public override void CheckSwitchState()
+        {
+            if (Factory.HasState(PlayerStates.WallClinging))
+            {
+                if (Ctx.Stamina <= 0)
+                {
+                    if (TrySwitchState(PlayerStates.WallClinging))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.LedgeHanging))
+            {
+                if (EvaluateLedgeDetection())
+                {
+                    if (TrySwitchState(PlayerStates.LedgeHanging))
+                        return;
+                }
+            }
+        }
 
         #endregion
     }

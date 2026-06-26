@@ -179,7 +179,6 @@ namespace Entities.Player.States.Base
                 return true;
             }
 
-            // Context switches go through the state machine
             if (stateInstance.StateType == PlayerStateType.Context)
             {
                 Ctx.SwitchContextState(desiredState);
@@ -199,7 +198,6 @@ namespace Entities.Player.States.Base
                 return TrySwitchState(desiredState);
             }
 
-            // Context switches go through the state machine
             if (stateInstance.StateType == PlayerStateType.Context)
             {
                 Ctx.SwitchContextState(desiredState);
@@ -234,6 +232,14 @@ namespace Entities.Player.States.Base
 
         private void SwitchRootState(PlayerBaseState newState)
         {
+            if (IsLocked)
+            {
+                Debug.LogWarning($"<color=red>Attempted to switch to root state {newState.StateKey} while in locked state {StateKey}. Ignoring...</color>");
+                return;
+            }
+
+            newState.InheritLockedSubStatesFrom(this);
+
             ExitStates(newState);
 
             PlayerBaseState previousState = _ctx.CurrentState;
@@ -247,6 +253,12 @@ namespace Entities.Player.States.Base
 
         protected void SwitchMovementSubState(PlayerBaseState newMovementState)
         {
+            if (_movementSubState?.IsLocked == true)
+            {
+                Debug.LogWarning($"<color=red>Attempted to switch sub-state {newMovementState.StateKey} while locked</color>");
+                return;
+            }
+
             _movementSubState?.ExitState(newMovementState);
 
             PlayerBaseState previousState = _movementSubState;
@@ -260,19 +272,44 @@ namespace Entities.Player.States.Base
             newMovementState.InitializeSubStates();
         }
 
-        protected void SwitchActionSubState(PlayerBaseState newCombatState)
+        protected void SwitchActionSubState(PlayerBaseState newActionState)
         {
-            _actionSubState?.ExitState(newCombatState);
+            if (_actionSubState?.IsLocked == true)
+            {
+                Debug.LogWarning($"<color=red>Attempted to switch sub-state {newActionState.StateKey} while locked</color>");
+                return;
+            }
+
+            _actionSubState?.ExitState(newActionState);
 
             PlayerBaseState previousState = _actionSubState;
 
-            _actionSubState = newCombatState;
-            newCombatState.SetSuperState(this);
+            _actionSubState = newActionState;
+            newActionState.SetSuperState(this);
 
-            newCombatState.EnterState(previousState);
-            newCombatState.OnStateEnteredNotification(newCombatState);
+            newActionState.EnterState(previousState);
+            newActionState.OnStateEnteredNotification(newActionState);
 
-            newCombatState.InitializeSubStates();
+            newActionState.InitializeSubStates();
+        }
+
+        public void InheritLockedSubStatesFrom(PlayerBaseState oldState)
+        {
+            if (oldState.MovementSubState?.IsLocked == true)
+            {
+                _movementSubState = oldState.MovementSubState;
+                _movementSubState.SetSuperState(this);
+
+                oldState._movementSubState = null;
+            }
+
+            if (oldState.ActionSubState?.IsLocked == true)
+            {
+                _actionSubState = oldState.ActionSubState;
+                _actionSubState.SetSuperState(this);
+
+                oldState._actionSubState = null;
+            }
         }
 
         #endregion
@@ -283,6 +320,7 @@ namespace Entities.Player.States.Base
         public virtual void HandleInputActions(IInputProvider input)
         {
             HandleInputAction(input);
+
             _movementSubState?.HandleInputActions(input);
             _actionSubState?.HandleInputActions(input);
         }

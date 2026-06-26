@@ -10,8 +10,6 @@ namespace Entities.Player.States
             StateKey = PlayerStates.WallLunging;
         }
 
-        private Rigidbody _rb;
-
         public override void EnterState(PlayerBaseState previousState)
         {
             Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
@@ -20,13 +18,16 @@ namespace Entities.Player.States
             Ctx.WalkJumpToWalledTime = Ctx.MaxWalkJumpToWalledTime;
             Ctx.JumpToWalledTime = Ctx.MaxJumpToWalledTime;
 
-            _rb = Ctx.Rigidbody;
+            Ctx.Rigidbody.linearVelocity = Vector3.zero;
 
-            _rb.linearVelocity = Vector3.zero;
             Vector3 lungeForce = Ctx.JumpDirection * 7f;
             lungeForce += Ctx.WallDetector.WallNormal * -0.5f;
 
-            _rb.AddForce(lungeForce, ForceMode.Impulse);
+            Vector3 vel = Ctx.Rigidbody.linearVelocity;
+            vel.y = 0;
+            Ctx.Rigidbody.linearVelocity = vel;
+
+            Ctx.Rigidbody.AddForce(lungeForce, ForceMode.Impulse);
         }
 
         public override void ExitState(PlayerBaseState nextState)

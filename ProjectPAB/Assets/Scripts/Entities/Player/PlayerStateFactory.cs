@@ -67,6 +67,8 @@ namespace Entities.Player
             RegisterState(PlayerStates.Running, new RunningState(_context, this));
             RegisterState(PlayerStates.Sliding, new SlidingState(_context, this));
 
+            RegisterState(PlayerStates.Diving, new DivingState(_context, this));
+
             // --- Climbing/Wall States ---
             RegisterState(PlayerStates.Climbing, new ClimbingState(_context, this));
             RegisterState(PlayerStates.WallWalking, new WallWalkingState(_context, this));

@@ -16,6 +16,7 @@ namespace Systems.Input
         private readonly ButtonInputState _shiftState = new();
         private readonly ButtonInputState _shootState = new();
         private readonly ButtonInputState _slideState = new();
+        private readonly ButtonInputState _diveState = new();
 
         // Implementing the interface properties by exposing them as read-only
         public MovementInputState MoveState => _moveState;
@@ -24,8 +25,9 @@ namespace Systems.Input
         public IReadOnlyButtonState RunState => _runState;
         public IReadOnlyButtonState ShiftState => _shiftState;
         public IReadOnlyButtonState ShootState => _shootState;
-        public IReadOnlyButtonState BlackState => _shootState; // Handled based on project's previous mapped fields
         public IReadOnlyButtonState SlideState => _slideState;
+        public IReadOnlyButtonState DiveState => _diveState;
+
 
         public bool ToggleRun { get => _toggleRun; set => _toggleRun = value; }
 
@@ -47,6 +49,7 @@ namespace Systems.Input
             _shiftState.Reset();
             _shootState.Reset();
             _slideState.Reset();
+            _diveState.Reset();
         }
 
         private void RegisterInputActions(bool subscribe)
@@ -62,6 +65,7 @@ namespace Systems.Input
             ToggleActionBinding(inputActions["Shift"], OnShiftInput, subscribe);
             ToggleActionBinding(inputActions["Shoot"], OnShootInput, subscribe);
             ToggleActionBinding(inputActions["Slide"], OnSlideInput, subscribe);
+            ToggleActionBinding(inputActions["Dive"], OnDiveInput, subscribe);
         }
 
         private void ToggleActionBinding(InputAction action, System.Action<InputAction.CallbackContext> callback, bool subscribe)
@@ -127,6 +131,11 @@ namespace Systems.Input
         private void OnSlideInput(InputAction.CallbackContext context)
         {
             _slideState.UpdateValue(context.ReadValueAsButton());
+        }
+
+        private void OnDiveInput(InputAction.CallbackContext context)
+        {
+            _diveState.UpdateValue(context.ReadValueAsButton());
         }
 
         #endregion

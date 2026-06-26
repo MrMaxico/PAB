@@ -1,5 +1,6 @@
 using Entities.Player.Detection;
 using Entities.Player.States.Base;
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
@@ -98,6 +99,18 @@ namespace Entities.Player.States
         #endregion
 
         #region Inputs
+
+        protected override void HandleInputAction(IInputProvider input)
+        {
+            if (Factory.HasState(PlayerStates.Diving))
+            {
+                if (input.DiveState.IsPressed)
+                {
+                    if (TrySwitchState(PlayerStates.Diving))
+                        return;
+                }
+            }
+        }
 
         #endregion
 

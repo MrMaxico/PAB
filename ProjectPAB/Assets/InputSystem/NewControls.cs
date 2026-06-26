@@ -154,6 +154,15 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Dive"",
+                    ""type"": ""Button"",
+                    ""id"": ""8b6e5fb8-680d-4efd-a208-bbbcff3cc69e"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -277,6 +286,17 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
                     ""action"": ""Slide"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d3e7f144-5168-4ea8-b67e-fe3f0d810001"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Dive"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -292,6 +312,7 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
         m_Controlls_Shift = m_Controlls.FindAction("Shift", throwIfNotFound: true);
         m_Controlls_Shoot = m_Controlls.FindAction("Shoot", throwIfNotFound: true);
         m_Controlls_Slide = m_Controlls.FindAction("Slide", throwIfNotFound: true);
+        m_Controlls_Dive = m_Controlls.FindAction("Dive", throwIfNotFound: true);
     }
 
     ~@NewControls()
@@ -379,6 +400,7 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Controlls_Shift;
     private readonly InputAction m_Controlls_Shoot;
     private readonly InputAction m_Controlls_Slide;
+    private readonly InputAction m_Controlls_Dive;
     /// <summary>
     /// Provides access to input actions defined in input action map "Controlls".
     /// </summary>
@@ -418,6 +440,10 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Controlls/Slide".
         /// </summary>
         public InputAction @Slide => m_Wrapper.m_Controlls_Slide;
+        /// <summary>
+        /// Provides access to the underlying input action "Controlls/Dive".
+        /// </summary>
+        public InputAction @Dive => m_Wrapper.m_Controlls_Dive;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -465,6 +491,9 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
             @Slide.started += instance.OnSlide;
             @Slide.performed += instance.OnSlide;
             @Slide.canceled += instance.OnSlide;
+            @Dive.started += instance.OnDive;
+            @Dive.performed += instance.OnDive;
+            @Dive.canceled += instance.OnDive;
         }
 
         /// <summary>
@@ -497,6 +526,9 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
             @Slide.started -= instance.OnSlide;
             @Slide.performed -= instance.OnSlide;
             @Slide.canceled -= instance.OnSlide;
+            @Dive.started -= instance.OnDive;
+            @Dive.performed -= instance.OnDive;
+            @Dive.canceled -= instance.OnDive;
         }
 
         /// <summary>
@@ -586,5 +618,12 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSlide(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Dive" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDive(InputAction.CallbackContext context);
     }
 }

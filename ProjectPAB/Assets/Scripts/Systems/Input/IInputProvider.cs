@@ -11,5 +11,6 @@ namespace Systems.Input
         IReadOnlyButtonState ShiftState { get; }
         IReadOnlyButtonState ShootState { get; }
         IReadOnlyButtonState SlideState { get; }
+        IReadOnlyButtonState DiveState { get; }
     }
 }

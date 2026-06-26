@@ -42,13 +42,27 @@ namespace Entities.Player.Detection
             RegisterCheck(check);
         }
 
+        /// <summary>
+        /// Register a wall check that dynamically shoots in the player's movement direction.
+        /// </summary>
+        public void AddMovementCheck(string id, float distance, int priority,
+            CastType type, float radius = 0, LayerMask layerMask = default,
+            QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Ignore)
+        {
+            // Pass Vector3.zero as a placeholder since the direction is dynamic
+            var check = new WallCheck(id, Vector3.zero, distance, priority, type, radius,
+                ResolveLayerMask(layerMask), triggerInteraction, useMovementDirection: true);
+
+            RegisterCheck(check);
+        }
+
         // ─── Tick ─── \\
 
         /// <summary>
         /// Casts all registered checks and derives wall data from the best hit.
-        /// Call once per FixedUpdate.
+        /// Pass the player's current movement/velocity direction here.
         /// </summary>
-        public void Tick()
+        public void Tick(Vector3 movementDirection = new())
         {
             if (IsInWallJumpGracePeriod())
             {
@@ -57,7 +71,8 @@ namespace Entities.Player.Detection
                 return;
             }
 
-            CastRegisteredChecks();
+            // Pass the direction into the casting helper
+            CastRegisteredChecks(movementDirection);
 
             if (TryGetBestHit(out RaycastHit bestHit))
             {
@@ -84,14 +99,27 @@ namespace Entities.Player.Detection
             return Time.time - _lastWallJumpTime < _wallJumpGracePeriod;
         }
 
-        private void CastRegisteredChecks()
+        private void CastRegisteredChecks(Vector3 movementDirection = new())
         {
             Vector3 origin = RayOrigin;
+            // Normalize to ensure accurate ray distances
+            Vector3 normalizedMovement = movementDirection.normalized;
 
             for (int i = 0; i < Checks.Count; i++)
             {
                 WallCheck check = Checks[i];
-                Vector3 worldDir = _playerObject.TransformDirection(check.Direction);
+
+                // CHOOSE DIRECTION: Use movement vector if flagged, otherwise fall back to player facing
+                Vector3 worldDir;
+                //if (check.UseMovementDirection && normalizedMovement != Vector3.zero)
+                if (check.UseMovementDirection)
+                {
+                    worldDir = normalizedMovement;
+                }
+                else
+                {
+                    worldDir = _playerObject.TransformDirection(check.Direction);
+                }
 
                 bool hit;
                 RaycastHit hitInfo;
@@ -142,30 +170,49 @@ namespace Entities.Player.Detection
         {
             if (_playerObject == null) return;
 
-            Vector3 origin = RayOrigin;
+            Vector3 origin = RayOrigin; //
 
-            for (int i = 0; i < Checks.Count; i++)
+            // Try to find a Rigidbody to preview movement direction live in the Editor scene view
+            Vector3 stateMachineMoveDir = Vector3.zero;
+            if (Application.isPlaying && TryGetComponent(out PlayerStateMachine psm))
             {
-                WallCheck check = Checks[i];
-                Vector3 worldDir = _playerObject.TransformDirection(check.Direction);
+                stateMachineMoveDir = psm.MoveDirection.normalized;
+            }
 
-                Gizmos.color = check.IsHit ? Color.green : Color.red;
-                Gizmos.DrawRay(origin, worldDir * check.Distance);
+            for (int i = 0; i < Checks.Count; i++) //
+            {
+                WallCheck check = Checks[i]; //
+                Vector3 worldDir;
 
-                if (check.Type == CastType.SphereCast)
+                // Match your CastRegisteredChecks logic so visuals match real physics!
+                if (check.UseMovementDirection)
                 {
-                    Gizmos.DrawWireSphere(origin + worldDir * check.Distance, check.Radius);
+                    worldDir = (stateMachineMoveDir != Vector3.zero) ? stateMachineMoveDir : _playerObject.forward;
+                    Gizmos.color = Color.pink;
+                }
+                else
+                {
+                    worldDir = _playerObject.TransformDirection(check.Direction); //
+                }
+
+                if (!check.UseMovementDirection)
+                    Gizmos.color = check.IsHit ? Color.green : Color.red; //
+                Gizmos.DrawRay(origin, worldDir * check.Distance); //
+
+                if (check.Type == CastType.SphereCast) //
+                {
+                    Gizmos.DrawWireSphere(origin + worldDir * check.Distance, check.Radius); //
                 }
             }
 
-            if (WallNormal == Vector3.zero) return;
+            if (WallNormal == Vector3.zero) return; //
 
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawSphere(WallHit.point, 0.05f);
-            Gizmos.DrawRay(WallHit.point, WallNormal * 0.5f);
+            Gizmos.color = Color.magenta; //
+            Gizmos.DrawSphere(WallHit.point, 0.05f); //
+            Gizmos.DrawRay(WallHit.point, WallNormal * 0.5f); //
 
-            Gizmos.color = Color.blue;
-            Gizmos.DrawRay(origin, WallForward * 1.0f);
+            Gizmos.color = Color.blue; //
+            Gizmos.DrawRay(origin, WallForward * 1.0f); //
         }
 #endif
     }
