@@ -163,6 +163,15 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SwitchPerspective"",
+                    ""type"": ""Button"",
+                    ""id"": ""38d12ce7-93fe-4c20-9af9-77415144dfd4"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -297,6 +306,17 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
                     ""action"": ""Dive"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2d1db280-6da2-46bb-8e6d-90ab0ef201ff"",
+                    ""path"": ""<Keyboard>/f"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SwitchPerspective"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -313,6 +333,7 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
         m_Controlls_Shoot = m_Controlls.FindAction("Shoot", throwIfNotFound: true);
         m_Controlls_Slide = m_Controlls.FindAction("Slide", throwIfNotFound: true);
         m_Controlls_Dive = m_Controlls.FindAction("Dive", throwIfNotFound: true);
+        m_Controlls_SwitchPerspective = m_Controlls.FindAction("SwitchPerspective", throwIfNotFound: true);
     }
 
     ~@NewControls()
@@ -401,6 +422,7 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Controlls_Shoot;
     private readonly InputAction m_Controlls_Slide;
     private readonly InputAction m_Controlls_Dive;
+    private readonly InputAction m_Controlls_SwitchPerspective;
     /// <summary>
     /// Provides access to input actions defined in input action map "Controlls".
     /// </summary>
@@ -444,6 +466,10 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Controlls/Dive".
         /// </summary>
         public InputAction @Dive => m_Wrapper.m_Controlls_Dive;
+        /// <summary>
+        /// Provides access to the underlying input action "Controlls/SwitchPerspective".
+        /// </summary>
+        public InputAction @SwitchPerspective => m_Wrapper.m_Controlls_SwitchPerspective;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -494,6 +520,9 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
             @Dive.started += instance.OnDive;
             @Dive.performed += instance.OnDive;
             @Dive.canceled += instance.OnDive;
+            @SwitchPerspective.started += instance.OnSwitchPerspective;
+            @SwitchPerspective.performed += instance.OnSwitchPerspective;
+            @SwitchPerspective.canceled += instance.OnSwitchPerspective;
         }
 
         /// <summary>
@@ -529,6 +558,9 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
             @Dive.started -= instance.OnDive;
             @Dive.performed -= instance.OnDive;
             @Dive.canceled -= instance.OnDive;
+            @SwitchPerspective.started -= instance.OnSwitchPerspective;
+            @SwitchPerspective.performed -= instance.OnSwitchPerspective;
+            @SwitchPerspective.canceled -= instance.OnSwitchPerspective;
         }
 
         /// <summary>
@@ -625,5 +657,12 @@ public partial class @NewControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnDive(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SwitchPerspective" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSwitchPerspective(InputAction.CallbackContext context);
     }
 }

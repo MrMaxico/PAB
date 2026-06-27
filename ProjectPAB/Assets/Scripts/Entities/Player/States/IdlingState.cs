@@ -15,12 +15,16 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         #region MonoBehaviours

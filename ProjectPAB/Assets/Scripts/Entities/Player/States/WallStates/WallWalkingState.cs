@@ -20,7 +20,9 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
 
             // Lock the run direction based on which side of the wall we hit
             WalledState wall = (WalledState)CurrentSuperState;
@@ -37,7 +39,9 @@ namespace Entities.Player.States
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         #region MonoBehaveiours
@@ -55,7 +59,7 @@ namespace Entities.Player.States
             if (_runDirection != Vector3.zero)
             {
                 Quaternion faceForward = Quaternion.LookRotation(_runDirection, Vector3.up);
-                Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, faceForward, Time.fixedDeltaTime * 10f);
+                Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.PlayerModel.rotation, faceForward, Time.fixedDeltaTime * 10f);
             }
         }
 

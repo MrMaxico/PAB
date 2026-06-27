@@ -1,5 +1,6 @@
 using Entities.Player.Detection;
 using Entities.Player.States.Base;
+using System;
 using Systems.Input;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +10,10 @@ namespace Entities.Player
     [RequireComponent(typeof(PlayerContext))]
     public class PlayerStateMachine : MonoBehaviour
     {
+        [Header("Debug")]
+        [SerializeField] private bool _doDebug = false;
+        public bool DoDebug => _doDebug;
+
         [Header("State System")]
         [SerializeField] private PlayerStateFactory _stateFactory;
         public PlayerStateFactory Factory => _stateFactory;
@@ -29,7 +34,22 @@ namespace Entities.Player
         }
 
         public IInputProvider InputProvider => PlayerContext.InputProvider;
-        public Transform PlayerObject => PlayerContext.PlayerModel;
+        public Transform PlayerModel => PlayerContext.PlayerModel;
+        public Quaternion SmoothModelRotation
+        {
+            get => PlayerModel.rotation;
+            set => PlayerModel.rotation = value;
+        }
+
+        public Quaternion SnapModelRotation
+        {
+            set
+            {
+                RotationSnapped = true;
+                SmoothModelRotation = value;
+            }
+        }
+
         public Transform Orientation => PlayerContext.Orientation;
         public Transform Transform => PlayerContext.transform;
         public Rigidbody Rigidbody => PlayerContext.Rigidbody;
@@ -153,53 +173,79 @@ namespace Entities.Player
 
         #endregion
 
+        #region StateTransitionEvents
+
+        public event Action<PlayerStates> OnRootStateTransitioned;
+        public event Action<PlayerStates> OnMovementStateTransitioned;
+        public event Action<PlayerStates> OnActionStateTransitioned;
+        public event Action<PlayerStates> OnContextStateTransitioned;
+
+        public void InvokeRootStateTransitioned(PlayerStates state) => OnRootStateTransitioned?.Invoke(state);
+        public void InvokeMovementStateTransitioned(PlayerStates state) => OnMovementStateTransitioned?.Invoke(state);
+        public void InvokeActionStateTransitioned(PlayerStates state) => OnActionStateTransitioned?.Invoke(state);
+        public void InvokeContextStateTransitioned(PlayerStates state) => OnContextStateTransitioned?.Invoke(state);
+
+        #endregion
+
         private void Start()
         {
-            _playerContext = GetComponent<PlayerContext>();
-
             _stateFactory = new PlayerStateFactory(this);
-            _currentRootState = _stateFactory.GetState(PlayerStates.Falling);
-            _currentRootState.EnterState();
 
-            SwitchContextState(PlayerStates.ThirdPersonCamera);
+            if (IsLocalPlayer)
+            {
+                _currentRootState = _stateFactory.GetState(PlayerStates.Falling);
+                _currentRootState.EnterState();
 
-            Stamina = MaxStamina;
+                SwitchContextState(PlayerStates.ThirdPersonCamera);
 
-            if (_staminaBar != null)
-                _staminaBar.maxValue = MaxStamina;
+                Stamina = MaxStamina;
+
+                if (_staminaBar != null)
+                    _staminaBar.maxValue = MaxStamina;
+            }
         }
 
         private void Update()
         {
-            HandleInputs();
+            if (IsLocalPlayer)
+            {
+                HandleInputs();
 
-            _currentRootState?.UpdateStates();
-            _currentContextState?.UpdateStates();
+                _currentRootState?.UpdateStates();
+                _currentContextState?.UpdateStates();
 
-            if (_staminaBar != null)
-                _staminaBar.value = Stamina;
+                if (_staminaBar != null)
+                    _staminaBar.value = Stamina;
+            }
         }
+
 
         private void FixedUpdate()
         {
-            if (_stepUpGraceTime > 0f)
-                _stepUpGraceTime -= Time.fixedDeltaTime;
+            if (IsLocalPlayer)
+            {
+                if (_stepUpGraceTime > 0f)
+                    _stepUpGraceTime -= Time.fixedDeltaTime;
 
-            GroundDetector.Tick();
-            WallDetector.Tick(MoveDirection);
-            RailDetector.Tick();
+                GroundDetector.Tick();
+                WallDetector.Tick(MoveDirection);
+                RailDetector.Tick();
 
-            _currentRootState?.FixedUpdateStates();
-            _currentContextState?.FixedUpdateStates();
+                _currentRootState?.FixedUpdateStates();
+                _currentContextState?.FixedUpdateStates();
 
-            _currentRootState?.CheckSwitchStates();
-            _currentContextState?.CheckSwitchStates();
+                _currentRootState?.CheckSwitchStates();
+                _currentContextState?.CheckSwitchStates();
+            }
         }
 
         private void LateUpdate()
         {
-            _currentRootState?.LateUpdateStates();
-            _currentContextState?.LateUpdateStates();
+            if (IsLocalPlayer)
+            {
+                _currentRootState?.LateUpdateStates();
+                _currentContextState?.LateUpdateStates();
+            }
         }
 
         // ─── Input ─── \\
@@ -219,11 +265,15 @@ namespace Entities.Player
             _currentContextState?.HandleInputActions(InputProvider);
         }
 
+        public bool IsLocalPlayer { get; set; } = true;
+
+        public bool RotationSnapped { get; set; }
+
         private bool _mStateToggle = false;
 
         // ─── State transitions ─── \\
 
-        public void TransitionTo(PlayerStates nextState)
+        public void SwitchRootState(PlayerStates nextState)
         {
             PlayerBaseState previousState = _currentRootState;
             PlayerBaseState nextStateInstance = _stateFactory.GetState(nextState);
@@ -232,6 +282,30 @@ namespace Entities.Player
 
             _currentRootState = nextStateInstance;
             _currentRootState.EnterState(previousState);
+        }
+
+        public void SwitchMovementState(PlayerStates nextSubState)
+        {
+            if (_currentRootState == null) return;
+
+            PlayerBaseState previousSub = _currentRootState.MovementSubState;
+            PlayerBaseState nextInstance = _stateFactory.GetState(nextSubState);
+
+            previousSub?.ExitStates(nextInstance);
+            _currentRootState.MovementSubState = nextInstance;
+            nextInstance?.EnterState(previousSub);
+        }
+
+        public void SwitchActionState(PlayerStates nextSubState)
+        {
+            if (_currentRootState == null) return;
+
+            PlayerBaseState previousSub = _currentRootState.ActionSubState;
+            PlayerBaseState nextInstance = _stateFactory.GetState(nextSubState);
+
+            previousSub?.ExitStates(nextInstance);
+            _currentRootState.ActionSubState = nextInstance;
+            nextInstance?.EnterState(previousSub);
         }
 
         /// <summary>
@@ -248,6 +322,8 @@ namespace Entities.Player
             _currentContextState?.ExitStates(newContext);
 
             _currentContextState = newContext;
+
+            InvokeContextStateTransitioned(contextState);
             _currentContextState.EnterState(previousContext);
             _currentContextState.InitializeSubStates();
         }

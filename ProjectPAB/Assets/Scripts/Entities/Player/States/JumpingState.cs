@@ -24,7 +24,9 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState.StateKey}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState.StateKey}");
+#endif
 
             Ctx.GroundDetector.AddCheck(GroundCheck, Vector3.down, 0.55f, 0, CastType.SphereCast, radius: 0.3f);
 
@@ -48,7 +50,6 @@ namespace Entities.Player.States
             Ctx.WalkJumpToWalledTime = Ctx.MaxWalkJumpToWalledTime;
             Ctx.JumpToWalledTime = Ctx.MaxJumpToWalledTime;
 
-            //Ctx.ConsumeJumpBuffer();
             Ctx.GroundDetector.ResetCoyoteTime();
 
             if (previousState.StateKey == PlayerStates.Grounded)
@@ -74,7 +75,9 @@ namespace Entities.Player.States
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState.StateKey}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState.StateKey}");
+#endif
 
             Ctx.GroundDetector.RemoveCheck(GroundCheck);
 

@@ -13,12 +13,16 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         #region MonoBehaveiours
@@ -58,10 +62,10 @@ namespace Entities.Player.States
 
             if (moveDir.magnitude > 0.1f)
             {
-                Vector3 rotationDir = new Vector3(moveDir.x, 0, moveDir.z);
+                Vector3 rotationDir = new(moveDir.x, 0, moveDir.z);
                 Quaternion targetRotation = Quaternion.LookRotation(rotationDir, Vector3.up);
 
-                Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, targetRotation, Time.fixedDeltaTime * 10f);
+                Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.PlayerModel.rotation, targetRotation, Time.fixedDeltaTime * 10f);
             }
         }
 

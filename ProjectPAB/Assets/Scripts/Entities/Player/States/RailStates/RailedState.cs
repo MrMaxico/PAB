@@ -24,7 +24,9 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
 
             Ctx.GroundDetector.AddCheck(GroundCheck, Vector3.down, 0.8f, 0, CastType.SphereCast, radius: 0.5f);
             Ctx.RailDetector.AddCheck(RailCheck, Vector3.down, 1f, 0, CastType.SphereCast, radius: 0.35f);
@@ -47,7 +49,9 @@ namespace Entities.Player.States
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
 
             Ctx.GroundDetector.RemoveCheck(GroundCheck);
             Ctx.RailDetector.RemoveCheck(RailCheck);
@@ -96,7 +100,7 @@ namespace Entities.Player.States
 
             lookDir = new(lookDir.x, 0f, lookDir.z);
             Quaternion targetRot = Quaternion.LookRotation(lookDir, Vector3.up);
-            Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, targetRot, 15f * Time.fixedDeltaTime);
+            Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.PlayerModel.rotation, targetRot, 15f * Time.fixedDeltaTime);
         }
 
         private void SnapToRail()
@@ -114,7 +118,7 @@ namespace Entities.Player.States
             SplineUtility.Evaluate(worldSpline, tAhead, out float3 posAhead, out _, out _);
             Vector3 derivedForward = ((Vector3)posAhead - (Vector3)worldPos).normalized;
 
-            float dot = Vector3.Dot(Ctx.PlayerObject.forward, derivedForward);
+            float dot = Vector3.Dot(Ctx.PlayerModel.forward, derivedForward);
             _grindDirection = dot >= 0 ? 1 : -1;
 
             Vector3 snappedPosition = (Vector3)worldPos + (Vector3.up);
@@ -153,11 +157,11 @@ namespace Entities.Player.States
             {
                 if (input.JumpState.UseBufferedPressOrHold())
                 {
-                    Vector3 railForward = Ctx.PlayerObject.forward;
+                    Vector3 railForward = Ctx.PlayerModel.forward;
                     railForward.y = 0f;
                     railForward.Normalize();
 
-                    Vector3 railRight = Ctx.PlayerObject.right;
+                    Vector3 railRight = Ctx.PlayerModel.right;
                     railRight.y = 0f;
                     railRight.Normalize();
 

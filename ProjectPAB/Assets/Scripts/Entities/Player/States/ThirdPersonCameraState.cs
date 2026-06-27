@@ -20,7 +20,11 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} from {previousState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
+
+            if (!Ctx.IsLocalPlayer) return;
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
@@ -46,7 +50,9 @@ namespace Entities.Player.States
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} to {nextState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         #region MonoBehaviours

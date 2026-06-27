@@ -20,12 +20,16 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         #region MonoBehaviours
@@ -35,7 +39,7 @@ namespace Entities.Player.States
             HandleClimbing();
 
             Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.WallNormal, Vector3.up);
-            Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, faceWallRotation, Time.fixedDeltaTime * 15f);
+            Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.PlayerModel.rotation, faceWallRotation, Time.fixedDeltaTime * 15f);
         }
 
         #endregion
@@ -62,9 +66,7 @@ namespace Entities.Player.States
 
             Vector3 wallLookDirection = -Ctx.WallDetector.WallNormal;
 
-            Vector3 downRayStart = Ctx.WallDetector.WallHit.point
-                                   + (Vector3.up * LedgeCheckHeightOffset)
-                                   + (wallLookDirection * LedgeCheckForwardOffset);
+            Vector3 downRayStart = Ctx.WallDetector.WallHit.point + (Vector3.up * LedgeCheckHeightOffset) + (wallLookDirection * LedgeCheckForwardOffset);
 
             Ray downRay = new(downRayStart, Vector3.down);
 
@@ -105,7 +107,6 @@ namespace Entities.Player.States
                 {
                     if (CanStandOnLedge())
                     {
-                        Debug.LogError("Can stand on ledge, switching");
                         if (TrySwitchState(PlayerStates.ClimbUp))
                         {
                             Ctx.GroundDetector.RegisterJumpTime();

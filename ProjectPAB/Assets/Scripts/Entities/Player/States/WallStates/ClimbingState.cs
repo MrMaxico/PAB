@@ -24,21 +24,26 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
 
             Ctx.Rigidbody.useGravity = false;
             Ctx.Rigidbody.linearVelocity = Vector3.zero;
             Ctx.JumpDirection = Vector3.up * 1.2f;
 
             Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.WallNormal, Vector3.up);
-            Ctx.PlayerObject.rotation = Quaternion.Euler(faceWallRotation.eulerAngles.x, faceWallRotation.eulerAngles.y, 0);
+            Ctx.RotationSnapped = true;
+            Ctx.SnapModelRotation = Quaternion.Euler(faceWallRotation.eulerAngles.x, faceWallRotation.eulerAngles.y, 0);
 
             Ctx.WallDetector.AddMovementCheck(MoveCheck, 0.9f, 0, CastType.SphereCast, radius: 0.3f);
         }
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
 
             Ctx.WallDetector.RemoveCheck(MoveCheck);
         }
@@ -81,7 +86,7 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * 15f);
 
             Quaternion faceWallRotation = Quaternion.LookRotation(-activeWallNormal, Vector3.up);
-            Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, faceWallRotation, Time.fixedDeltaTime * 15f);
+            Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.SmoothModelRotation, faceWallRotation, Time.fixedDeltaTime * 15f);
         }
 
         #endregion

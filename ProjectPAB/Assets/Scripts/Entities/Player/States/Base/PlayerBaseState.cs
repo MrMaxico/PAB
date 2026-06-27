@@ -31,10 +31,18 @@ namespace Entities.Player.States.Base
         public void SetSuperState(PlayerBaseState superState) => _currentSuperState = superState;
 
         protected PlayerBaseState _movementSubState;
-        public PlayerBaseState MovementSubState => _movementSubState;
+        public PlayerBaseState MovementSubState
+        {
+            get => _movementSubState;
+            set => _movementSubState = value;
+        }
 
         protected PlayerBaseState _actionSubState;
-        public PlayerBaseState ActionSubState => _actionSubState;
+        public PlayerBaseState ActionSubState
+        {
+            get => _actionSubState;
+            set => _actionSubState = value;
+        }
 
         protected bool _isLocked = false;
         public bool IsLocked => _isLocked;
@@ -245,6 +253,7 @@ namespace Entities.Player.States.Base
             PlayerBaseState previousState = _ctx.CurrentState;
             _ctx.CurrentState = newState;
 
+            Ctx.InvokeRootStateTransitioned(newState.StateKey);
             newState.EnterState(previousState);
             newState.OnStateEntered(newState);
 
@@ -266,6 +275,7 @@ namespace Entities.Player.States.Base
             _movementSubState = newMovementState;
             newMovementState.SetSuperState(this);
 
+            Ctx.InvokeMovementStateTransitioned(newMovementState.StateKey);
             newMovementState.EnterState(previousState);
             newMovementState.OnStateEnteredNotification(newMovementState);
 
@@ -287,6 +297,7 @@ namespace Entities.Player.States.Base
             _actionSubState = newActionState;
             newActionState.SetSuperState(this);
 
+            Ctx.InvokeActionStateTransitioned(newActionState.StateKey);
             newActionState.EnterState(previousState);
             newActionState.OnStateEnteredNotification(newActionState);
 

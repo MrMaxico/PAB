@@ -13,7 +13,9 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
 
             Ctx.JumpDirection = Ctx.WallDetector.WallNormal + Vector3.up;
 
@@ -25,12 +27,14 @@ namespace Entities.Player.States
                 Ctx.Rigidbody.useGravity = true;
 
             Quaternion faceFromWall = Quaternion.LookRotation(Ctx.WallDetector.WallNormal, Vector3.up);
-            Ctx.PlayerObject.rotation = Quaternion.Euler(faceFromWall.eulerAngles.x, faceFromWall.eulerAngles.y, 0);
+            Ctx.SnapModelRotation = Quaternion.Euler(faceFromWall.eulerAngles.x, faceFromWall.eulerAngles.y, 0);
         }
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         #region MonoBehaveiours
@@ -46,7 +50,7 @@ namespace Entities.Player.States
                 Ctx.Rigidbody.useGravity = true;
 
                 Quaternion faceFromWall = Quaternion.LookRotation(Ctx.WallDetector.WallNormal, Vector3.up);
-                Ctx.PlayerObject.rotation = Quaternion.Euler(faceFromWall.eulerAngles.x, faceFromWall.eulerAngles.y, 0);
+                Ctx.SnapModelRotation = Quaternion.Euler(faceFromWall.eulerAngles.x, faceFromWall.eulerAngles.y, 0);
             }
         }
 

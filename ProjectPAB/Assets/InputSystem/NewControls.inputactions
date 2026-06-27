@@ -77,6 +77,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "SwitchPerspective",
+                    "type": "Button",
+                    "id": "38d12ce7-93fe-4c20-9af9-77415144dfd4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -209,6 +218,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Dive",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2d1db280-6da2-46bb-8e6d-90ab0ef201ff",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SwitchPerspective",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -3,35 +3,12 @@ using UnityEngine.InputSystem;
 
 namespace Systems.Input
 {
-    public class LocalInputProvider : MonoBehaviour, IInputProvider
+    public class LocalInputProvider : BaseInputProvider
     {
         [SerializeField] private PlayerInput _playerInput;
         [SerializeField] private bool _toggleRun;
 
-        // Concrete state trackers handling their own logic
-        private readonly MovementInputState _moveState = new();
-        private readonly InputState<Vector2> _mouseState = new();
-        private readonly ButtonInputState _jumpState = new();
-        private readonly ButtonInputState _runState = new();
-        private readonly ButtonInputState _shiftState = new();
-        private readonly ButtonInputState _shootState = new();
-        private readonly ButtonInputState _slideState = new();
-        private readonly ButtonInputState _diveState = new();
-
-        // Implementing the interface properties by exposing them as read-only
-        public MovementInputState MoveState => _moveState;
-        public IReadOnlyInputState<Vector2> MouseState => _mouseState;
-        public IReadOnlyButtonState JumpState => _jumpState;
-        public IReadOnlyButtonState RunState => _runState;
-        public IReadOnlyButtonState ShiftState => _shiftState;
-        public IReadOnlyButtonState ShootState => _shootState;
-        public IReadOnlyButtonState SlideState => _slideState;
-        public IReadOnlyButtonState DiveState => _diveState;
-
-
         public bool ToggleRun { get => _toggleRun; set => _toggleRun = value; }
-
-        IReadOnlyMovementInputState IInputProvider.MovementState => MoveState;
 
         private void OnEnable()
         {
@@ -41,15 +18,7 @@ namespace Systems.Input
         private void OnDisable()
         {
             RegisterInputActions(false);
-
-            _moveState.Reset();
-            _mouseState.Reset();
-            _jumpState.Reset();
-            _runState.Reset();
-            _shiftState.Reset();
-            _shootState.Reset();
-            _slideState.Reset();
-            _diveState.Reset();
+            ResetAllStates();
         }
 
         private void RegisterInputActions(bool subscribe)
@@ -66,6 +35,7 @@ namespace Systems.Input
             ToggleActionBinding(inputActions["Shoot"], OnShootInput, subscribe);
             ToggleActionBinding(inputActions["Slide"], OnSlideInput, subscribe);
             ToggleActionBinding(inputActions["Dive"], OnDiveInput, subscribe);
+            ToggleActionBinding(inputActions["SwitchPerspective"], OnSwitchPerspectiveInput, subscribe);
         }
 
         private void ToggleActionBinding(InputAction action, System.Action<InputAction.CallbackContext> callback, bool subscribe)
@@ -136,6 +106,11 @@ namespace Systems.Input
         private void OnDiveInput(InputAction.CallbackContext context)
         {
             _diveState.UpdateValue(context.ReadValueAsButton());
+        }
+
+        private void OnSwitchPerspectiveInput(InputAction.CallbackContext context)
+        {
+            _switchPerspectiveState.UpdateValue(context.ReadValueAsButton());
         }
 
         #endregion

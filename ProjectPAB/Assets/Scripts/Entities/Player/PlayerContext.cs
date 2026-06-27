@@ -114,5 +114,10 @@ namespace Entities.Player
             if (InputProvider == null)
                 Debug.LogError("Assigned input provider does not implement IInputProvider!");
         }
+
+        public void SetInputProvider(IInputProvider inputProvider)
+        {
+            InputProvider = inputProvider;
+        }
     }
 }

@@ -24,14 +24,18 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-            Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
 
             _moveDuration = 0f;
         }
 
         public override void ExitState(PlayerBaseState nextState)
         {
-            Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
         }
 
         #region MonoBehaveiours
@@ -56,7 +60,9 @@ namespace Entities.Player.States
 
                 if (dotProduct < -0.5f)
                 {
-                    Debug.Log("Trying to switch to jump from walking into a wall");
+#if UNITY_EDITOR
+                    if (Ctx.DoDebug) Debug.Log("Trying to switch to jump from walking into a wall");
+#endif
                     TrySwitchRootState(PlayerStates.Jumping);
                 }
             }
@@ -95,7 +101,7 @@ namespace Entities.Player.States
                 Vector3 rotationDir = new(moveDir.x, 0, moveDir.z);
                 Quaternion targetRotation = Quaternion.LookRotation(rotationDir, Vector3.up);
 
-                Ctx.PlayerObject.rotation = Quaternion.Slerp(Ctx.PlayerObject.rotation, targetRotation, Time.fixedDeltaTime * 10f);
+                Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.PlayerModel.rotation, targetRotation, Time.fixedDeltaTime * 10f);
             }
         }
 
