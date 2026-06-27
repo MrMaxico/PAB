@@ -16,6 +16,7 @@ namespace Systems.Input
         bool OnPressed();
         bool OnReleased();
         bool UseDoublePress();
+        bool UsePress();
 
         bool UseBufferedPress();
         bool UseBufferedPressOrHold();

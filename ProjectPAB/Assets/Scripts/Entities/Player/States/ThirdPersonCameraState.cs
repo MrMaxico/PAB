@@ -57,10 +57,6 @@ namespace Entities.Player.States
 
         #region MonoBehaviours
 
-        public override void UpdateState() { }
-
-        public override void FixedUpdateState() { }
-
         public override void LateUpdateState()
         {
             IInputProvider input = Ctx.PlayerContext.InputProvider;
@@ -95,10 +91,17 @@ namespace Entities.Player.States
 
         #region Inputs
 
+        protected override void HandleInputAction(IInputProvider input)
+        {
+            if (Factory.HasState(PlayerStates.FirstPersonCamera))
+            {
+                if (input.SwitchPerspectiveState.UsePress())
+                {
+                    Ctx.SwitchContextState(PlayerStates.FirstPersonCamera);
+                }
+            }
+        }
+
         #endregion
-
-        public override void InitializeSubState() { }
-
-        public override void CheckSwitchState() { }
     }
 }

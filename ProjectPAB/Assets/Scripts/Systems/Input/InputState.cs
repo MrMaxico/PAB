@@ -39,6 +39,8 @@ namespace Systems.Input
         private float _bufferExpirationTime = -999f;
         private float _lastPressTime = -999f;
 
+        private bool _pressConsumed;
+
         public void UpdateValue(bool newValue)
         {
             bool previousButtonState = RawInputValue;
@@ -62,6 +64,7 @@ namespace Systems.Input
             if (!newValue && previousButtonState)
             {
                 _releasedFrameId = Time.frameCount;
+                _pressConsumed = false;
             }
         }
 
@@ -110,6 +113,16 @@ namespace Systems.Input
             return false;
         }
 
+        public bool UsePress()
+        {
+            if (IsPressed && !_pressConsumed)
+            {
+                _pressConsumed = true;
+                return true;
+            }
+            return false;
+        }
+
         public void Reset()
         {
             RawInputValue = false;
@@ -119,6 +132,7 @@ namespace Systems.Input
             _doublePressedFrameId = -1;
             _bufferExpirationTime = -999f;
             _lastPressTime = -999f;
+            _pressConsumed = false;
         }
     }
 }
