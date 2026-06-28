@@ -1,4 +1,3 @@
-using Entities.Player.Detection;
 using Entities.Player.States.Base;
 using Systems.Input;
 using UnityEngine;
@@ -25,12 +24,12 @@ namespace Entities.Player.States
 #endif
 
             // Lock the run direction based on which side of the wall we hit
-            WalledState wall = (WalledState)CurrentSuperState;
+            //WalledState wall = (WalledState)CurrentSuperState;
 
-            if (wall.WallWalkSideRightLeft)
-                Ctx.WallDetector.AddCheck(RightCheck, Vector3.right, 0.8f, 1, CastType.Raycast);
-            else
-                Ctx.WallDetector.AddCheck(LeftCheck, Vector3.left, 0.8f, 2, CastType.Raycast);
+            //if (wall.WallWalkSideRightLeft)
+            //    Ctx.WallDetector.AddCheck(RightCheck, Vector3.right, 0.8f, 1, CastType.Raycast);
+            //else
+            //    Ctx.WallDetector.AddCheck(LeftCheck, Vector3.left, 0.8f, 2, CastType.Raycast);
 
             Ctx.WallDetector.Tick();
 
@@ -62,8 +61,6 @@ namespace Entities.Player.States
                 Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.PlayerModel.rotation, faceForward, Time.fixedDeltaTime * 10f);
             }
         }
-
-        public override void LateUpdateState() { }
 
         #endregion
 

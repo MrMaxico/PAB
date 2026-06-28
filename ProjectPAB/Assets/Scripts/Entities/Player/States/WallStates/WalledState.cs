@@ -110,8 +110,8 @@ namespace Entities.Player.States
                 {
                     if (TrySwitchSubState(PlayerStates.WallWalking))
                     {
-                        Ctx.WallDetector.RemoveCheck(RightCheck);
-                        Ctx.WallDetector.RemoveCheck(LeftCheck);
+                        //Ctx.WallDetector.RemoveCheck(RightCheck);
+                        //Ctx.WallDetector.RemoveCheck(LeftCheck);
 
                         Ctx.WallDetector.RemoveCheck(FrontCheck);
                         Ctx.WallDetector.RemoveCheck(BackCheck);

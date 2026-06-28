@@ -78,10 +78,12 @@ namespace Entities.Player.Detection
             {
                 WallNormal = bestHit.normal;
                 WallHit = bestHit;
-                WallForward = Vector3.Cross(WallNormal, Vector3.up);
 
-                if (Vector3.Dot(_playerObject.forward, WallForward) < 0)
-                    WallForward = -WallForward;
+                Vector3 velocityOnWall = Vector3.ProjectOnPlane(GetComponent<Rigidbody>().linearVelocity, WallNormal);
+                if (velocityOnWall.sqrMagnitude > 0.01f)
+                    WallForward = velocityOnWall.normalized;
+                else
+                    WallForward = Vector3.ProjectOnPlane(_playerObject.forward, WallNormal).normalized;
             }
             else
             {
