@@ -30,7 +30,7 @@ namespace Entities.Player.States
 
         public override void UpdateState()
         {
-            Ctx.transform.position = Ctx.WallDetector.WallHit.point + Vector3.up * 1.5f;
+            Ctx.transform.position = Ctx.WallDetector.Hit.Point + Vector3.up * 1.5f;
         }
 
         public override void FixedUpdateState()

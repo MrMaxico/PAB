@@ -33,7 +33,7 @@ namespace Entities.Player.States
 
             Ctx.WallDetector.Tick();
 
-            _runDirection = Ctx.WallDetector.WallForward;
+            _runDirection = Ctx.WallDetector.Hit.Forward;
         }
 
         public override void ExitState(PlayerBaseState nextState)
@@ -47,10 +47,9 @@ namespace Entities.Player.States
 
         public override void FixedUpdateState()
         {
-            // Gradually align run direction with the wall's current forward
-            if (Ctx.WallDetector.WallForward != Vector3.zero)
+            if (Ctx.WallDetector.Hit.Forward != Vector3.zero)
             {
-                _runDirection = Vector3.Slerp(_runDirection, Ctx.WallDetector.WallForward, Time.fixedDeltaTime * 10f);
+                _runDirection = Vector3.Slerp(_runDirection, Ctx.WallDetector.Hit.Forward, Time.fixedDeltaTime * 10f);
             }
 
             HandleWallRunning();
@@ -72,7 +71,7 @@ namespace Entities.Player.States
             {
                 if (input.JumpState.UseBufferedPress())
                 {
-                    Vector3 forceAway = Ctx.WallDetector.WallNormal;
+                    Vector3 forceAway = Ctx.WallDetector.Hit.Normal;
                     Vector3 forceUp = Vector3.up * 1.5f;
                     Vector3 forceForward = _runDirection * 0.2f;
 

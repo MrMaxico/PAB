@@ -509,6 +509,7 @@ MonoBehaviour:
   _baseSlideSpeed: 6.5
   _maxSlideSpeed: 25
   _slideAcceleration: 1.5
+  _grindSpeed: 12
   _maxSkateboardSpeed: 12
   _brakeStrength: 10
   _pushForce: 5
@@ -527,12 +528,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a625421fbb70b649b5ed6d3072ba53d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Entities.Player.Detection.GroundDetector
-  _groundLayer:
+  _detectionLayer:
     serializedVersion: 2
     m_Bits: 1
   _maxSlopeAngle: 45
   _originOffset: 0.1
-  _groundedGracePeriod: 0.3
+  _gracePeriod: 0.3
   _coyoteTime: 0.5
   _coyoteTimeCounter: 0
 --- !u!114 &5593911470796212968
@@ -565,12 +566,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c73e5ec9566e3a54f91a0efc67d1eaf2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Entities.Player.Detection.RailDetector
-  _railLayer:
+  _detectionLayer:
     serializedVersion: 2
     m_Bits: 64
   _maxSlopeAngle: 45
   _originOffset: 0.1
-  _railedGracePeriod: 0.3
+  _gracePeriod: 0.3
   _coyoteTime: 0.5
   _coyoteTimeCounter: 0
 --- !u!114 &474501095859533502
@@ -585,6 +586,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d1df5030e7715094ea90268ad2c291ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _doDebug: 0
   _playerContext: {fileID: 8997811308664197890}
   _maxJumps: 1
   _jumpToFallingTime: 0

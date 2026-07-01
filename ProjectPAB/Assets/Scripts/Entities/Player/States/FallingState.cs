@@ -1,4 +1,3 @@
-using Entities.Player.Detection;
 using Entities.Player.States.Base;
 using Systems.Input;
 using UnityEngine;
@@ -26,16 +25,16 @@ namespace Entities.Player.States
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 #endif
 
-            Ctx.GroundDetector.AddCheck(GroundCheck, Vector3.down, 0.8f, 0, CastType.SphereCast, radius: 0.5f);
+            Ctx.GroundDetector.AddSphere(GroundCheck, 0.8f, 0.5f);
 
-            Ctx.RailDetector.AddCheck(RailCheck, Vector3.down, 0.8f, 0, CastType.SphereCast, radius: 0.35f);
+            Ctx.RailDetector.AddSphere(RailCheck, 0.8f, 0.35f);
 
-            Ctx.WallDetector.AddCheck(FrontCheck, Vector3.forward, 0.7f, 0, CastType.SphereCast, radius: 0.3f);
+            Ctx.WallDetector.AddSphere(FrontCheck, Vector3.forward, 0.7f, 0.3f);
 
             if (Factory.HasState(PlayerStates.WallWalking))
             {
-                Ctx.WallDetector.AddCheck(RightCheck, Vector3.right, 0.7f, 0, CastType.Raycast);
-                Ctx.WallDetector.AddCheck(LeftCheck, Vector3.left, 0.7f, 0, CastType.Raycast);
+                Ctx.WallDetector.AddRay(RightCheck, Vector3.right, 0.7f);
+                Ctx.WallDetector.AddRay(LeftCheck, Vector3.left, 0.7f);
             }
 
             Ctx.GroundDetector.Tick();

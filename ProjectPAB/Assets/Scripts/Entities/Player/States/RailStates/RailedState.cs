@@ -1,4 +1,3 @@
-using Entities.Player.Detection;
 using Entities.Player.States.Base;
 using Systems.Input;
 using Unity.Mathematics;
@@ -28,8 +27,8 @@ namespace Entities.Player.States
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 #endif
 
-            Ctx.GroundDetector.AddCheck(GroundCheck, Vector3.down, 0.8f, 0, CastType.SphereCast, radius: 0.5f);
-            Ctx.RailDetector.AddCheck(RailCheck, Vector3.down, 1f, 0, CastType.SphereCast, radius: 0.35f);
+            Ctx.GroundDetector.AddSphere(GroundCheck, 0.8f, 0.5f);
+            Ctx.RailDetector.AddSphere(RailCheck, 1f, 0.35f);
 
             Ctx.Rigidbody.useGravity = false;
             Ctx.Rigidbody.isKinematic = true;

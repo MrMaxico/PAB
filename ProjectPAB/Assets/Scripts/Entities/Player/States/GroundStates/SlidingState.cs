@@ -30,7 +30,7 @@ namespace Entities.Player.States
 
         public override void UpdateState()
         {
-            if (Ctx.GroundDetector.IsSloped && Ctx.MoveDirection.y < 0)
+            if (Ctx.GroundDetector.Hit.IsSloped && Ctx.MoveDirection.y < 0)
             {
                 if (currentSlideSpeed < Ctx.PlayerContext.MaxSlideSpeed)
                 {
@@ -41,7 +41,7 @@ namespace Entities.Player.States
                     currentSlideSpeed = Ctx.PlayerContext.MaxSlideSpeed;
                 }
             }
-            else if (!Ctx.GroundDetector.IsSloped)
+            else if (!Ctx.GroundDetector.Hit.IsSloped)
             {
                 currentSlideSpeed = Ctx.PlayerContext.BaseSlideSpeed;
             }

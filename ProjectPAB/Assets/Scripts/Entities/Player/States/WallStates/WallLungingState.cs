@@ -23,7 +23,7 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = Vector3.zero;
 
             Vector3 lungeForce = Ctx.JumpDirection * 7f;
-            lungeForce += Ctx.WallDetector.WallNormal * -0.5f;
+            lungeForce += Ctx.WallDetector.Hit.Normal * -0.5f;
 
             Vector3 vel = Ctx.Rigidbody.linearVelocity;
             vel.y = 0;

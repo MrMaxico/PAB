@@ -55,7 +55,7 @@ namespace Entities.Player.States
             if (Ctx.WallDetector.IsHit("Front"))
             {
                 Vector3 playerMoveDir = Ctx.Rigidbody.linearVelocity.normalized;
-                Vector3 wallNormal = Ctx.WallDetector.WallNormal;
+                Vector3 wallNormal = Ctx.WallDetector.Hit.Normal;
                 float dotProduct = Vector3.Dot(playerMoveDir, wallNormal);
 
                 if (dotProduct < -0.5f)

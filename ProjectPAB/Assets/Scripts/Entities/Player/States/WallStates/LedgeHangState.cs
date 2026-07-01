@@ -38,7 +38,7 @@ namespace Entities.Player.States
         {
             HandleClimbing();
 
-            Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.WallNormal, Vector3.up);
+            Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.Hit.Normal, Vector3.up);
             Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.PlayerModel.rotation, faceWallRotation, Time.fixedDeltaTime * 15f);
         }
 
@@ -46,7 +46,7 @@ namespace Entities.Player.States
 
         private void HandleClimbing()
         {
-            Vector3 wallNormal = Ctx.WallDetector.WallNormal;
+            Vector3 wallNormal = Ctx.WallDetector.Hit.Normal;
             Vector3 wallSideDir = Vector3.Cross(wallNormal, Vector3.up).normalized;
             Vector3 wallUpDir = Vector3.Cross(wallSideDir, wallNormal).normalized;
 
@@ -62,17 +62,17 @@ namespace Entities.Player.States
         /// </summary>
         private bool EvaluateLedgeDetection()
         {
-            if (Ctx.WallDetector.WallNormal == Vector3.zero) return false;
+            if (Ctx.WallDetector.Hit.Normal == Vector3.zero) return false;
 
-            Vector3 wallLookDirection = -Ctx.WallDetector.WallNormal;
+            Vector3 wallLookDirection = -Ctx.WallDetector.Hit.Normal;
 
-            Vector3 downRayStart = Ctx.WallDetector.WallHit.point + (Vector3.up * LedgeCheckHeightOffset) + (wallLookDirection * LedgeCheckForwardOffset);
+            Vector3 downRayStart = Ctx.WallDetector.Hit.Point + (Vector3.up * LedgeCheckHeightOffset) + (wallLookDirection * LedgeCheckForwardOffset);
 
             Ray downRay = new(downRayStart, Vector3.down);
 
-            LayerMask wallLayer = Ctx.WallDetector.WallHit.collider.gameObject.layer;
+            LayerMask wallLayer = Ctx.WallDetector.Hit.Layer;
 
-            if (Physics.Raycast(downRay, out RaycastHit ledgeHit, LedgeCheckDistance, 1 << wallLayer))
+            if (Physics.Raycast(downRay, out RaycastHit ledgeHit, LedgeCheckDistance, wallLayer))
             {
                 if (ledgeHit.normal.y > 0.7f)
                 {
@@ -122,7 +122,7 @@ namespace Entities.Player.States
                 {
                     if (input.JumpState.UseBufferedPress() && _climbInput.y < 0)
                     {
-                        Vector3 wallNormal = Ctx.WallDetector.WallNormal;
+                        Vector3 wallNormal = Ctx.WallDetector.Hit.Normal;
                         Vector3 wallSideDir = Vector3.Cross(wallNormal, Vector3.up);
                         Vector3 wallUpDir = Vector3.up;
 
@@ -145,7 +145,7 @@ namespace Entities.Player.States
 
         private bool CanStandOnLedge()
         {
-            Vector3 forwardFromLedge = -Ctx.WallDetector.WallNormal;
+            Vector3 forwardFromLedge = -Ctx.WallDetector.Hit.Normal;
             float playerHeight = 2f;
             float playerRadius = 0.5f;
             Vector3 floorPoint = _ledgePoint + (forwardFromLedge * 0.2f);

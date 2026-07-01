@@ -1,4 +1,3 @@
-using Entities.Player.Detection;
 using Entities.Player.States.Base;
 using Systems.Input;
 using UnityEngine;
@@ -28,18 +27,18 @@ namespace Entities.Player.States
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 #endif
 
-            Ctx.GroundDetector.AddCheck(GroundCheck, Vector3.down, 0.8f, 0, CastType.SphereCast, radius: 0.5f);
+            Ctx.GroundDetector.AddSphere(GroundCheck, 0.8f, 0.5f);
 
-            Ctx.WallDetector.AddCheck(FrontCheck, Vector3.forward, 0.7f, 0, CastType.Raycast, radius: 0.3f);
+            Ctx.WallDetector.AddSphere(FrontCheck, Vector3.forward, 0.7f, 0.3f);
 
-            Ctx.RailDetector.AddCheck(RailCheck, Vector3.down, 1f, 0, CastType.SphereCast, radius: 0.35f);
+            Ctx.RailDetector.AddSphere(RailCheck, 1f, 0.35f);
 
             Ctx.GroundDetector.Tick();
             Ctx.WallDetector.Tick();
 
             Ctx.Rigidbody.useGravity = false;
 
-            if (!Ctx.GroundDetector.IsSloped)
+            if (!Ctx.GroundDetector.Hit.IsSloped)
             {
                 Vector3 vel = Ctx.Rigidbody.linearVelocity;
                 Ctx.Rigidbody.linearVelocity = new Vector3(vel.x, 0, vel.z);
@@ -81,11 +80,11 @@ namespace Entities.Player.States
         {
             Vector3 rawInput = (Ctx.Orientation.forward * _currentInput.y) + (Ctx.Orientation.right * _currentInput.x);
 
-            Vector3 groundNormal = Ctx.GroundDetector.Normal == Vector3.zero ? Vector3.up : Ctx.GroundDetector.Normal;
+            Vector3 groundNormal = Ctx.GroundDetector.Hit.Normal == Vector3.zero ? Vector3.up : Ctx.GroundDetector.Hit.Normal;
 
             Ctx.MoveDirection = Vector3.ProjectOnPlane(rawInput, groundNormal).normalized;
 
-            if (Ctx.GroundDetector.IsSloped)
+            if (Ctx.GroundDetector.Hit.IsSloped)
             {
                 Ctx.Rigidbody.AddForce(-groundNormal * 30f, ForceMode.Force);
             }

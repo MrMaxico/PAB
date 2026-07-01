@@ -1,4 +1,3 @@
-using Entities.Player.Detection;
 using Entities.Player.States.Base;
 using Systems.Input;
 using UnityEngine;
@@ -32,11 +31,10 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = Vector3.zero;
             Ctx.JumpDirection = Vector3.up * 1.2f;
 
-            Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.WallNormal, Vector3.up);
-            Ctx.RotationSnapped = true;
+            Quaternion faceWallRotation = Quaternion.LookRotation(-Ctx.WallDetector.Hit.Normal, Vector3.up);
             Ctx.SnapModelRotation = Quaternion.Euler(faceWallRotation.eulerAngles.x, faceWallRotation.eulerAngles.y, 0);
 
-            Ctx.WallDetector.AddMovementCheck(MoveCheck, 0.9f, 0, CastType.SphereCast, radius: 0.3f);
+            Ctx.WallDetector.AddMovementSphere(MoveCheck, 0.9f, 0.3f);
         }
 
         public override void ExitState(PlayerBaseState nextState)
@@ -68,8 +66,8 @@ namespace Entities.Player.States
 
         private void HandleClimbing()
         {
-            Vector3 activeWallNormal = Ctx.WallDetector.WallNormal;
-            Vector3 activeWallPoint = Ctx.WallDetector.WallHit.point;
+            Vector3 activeWallNormal = Ctx.WallDetector.Hit.Normal;
+            Vector3 activeWallPoint = Ctx.WallDetector.Hit.Point;
 
             if (Ctx.MoveDirection != Vector3.zero && Ctx.WallDetector.TryGetHit("Move", out RaycastHit moveHit))
             {
@@ -98,19 +96,20 @@ namespace Entities.Player.States
         /// </summary>
         private bool EvaluateLedgeDetection()
         {
-            if (Ctx.WallDetector.WallNormal == Vector3.zero) return false;
+            if (Ctx.WallDetector.Hit.Normal == Vector3.zero)
+                return false;
 
-            Vector3 wallLookDirection = -Ctx.WallDetector.WallNormal;
+            Vector3 wallLookDirection = -Ctx.WallDetector.Hit.Normal;
 
-            Vector3 downRayStart = Ctx.WallDetector.WallHit.point
+            Vector3 downRayStart = Ctx.WallDetector.Hit.Point
                                    + (Vector3.up * LedgeCheckHeightOffset)
                                    + (wallLookDirection * LedgeCheckForwardOffset);
 
             Ray downRay = new(downRayStart, Vector3.down);
 
-            LayerMask wallLayer = Ctx.WallDetector.WallHit.collider.gameObject.layer;
+            LayerMask wallLayer = Ctx.WallDetector.Hit.Layer;
 
-            if (Physics.Raycast(downRay, out RaycastHit ledgeHit, LedgeCheckDistance, 1 << wallLayer))
+            if (Physics.Raycast(downRay, out RaycastHit ledgeHit, LedgeCheckDistance, wallLayer))
             {
                 if (ledgeHit.normal.y > 0.7f)
                 {
@@ -138,7 +137,7 @@ namespace Entities.Player.States
                 {
                     if (input.JumpState.UseBufferedPress())
                     {
-                        Vector3 wallNormal = Ctx.WallDetector.WallNormal;
+                        Vector3 wallNormal = Ctx.WallDetector.Hit.Normal;
                         Vector3 wallSideDir = Vector3.Cross(wallNormal, Vector3.up);
                         Vector3 wallUpDir = Vector3.up;
 

@@ -13,146 +13,76 @@ namespace Entities.Player.Detection
         [SerializeField] private float _originHeight = 0.5f;
 
         // --- Results ---
-        public Vector3 WallNormal { get; private set; }
-        public Vector3 WallForward { get; private set; }
-        public RaycastHit WallHit { get; private set; }
+        public DetectionHit Hit { get; private set; }
 
         protected override LayerMask DefaultLayerMask => _wallLayer;
 
-        // --- Internal ---
         private float _lastWallJumpTime;
-
         private Vector3 RayOrigin => transform.position + Vector3.up * _originHeight;
 
-        // ─── Registration ─── \\
+        // ─── Registration shorthands ───
 
-        /// <summary>
-        /// Register a wall check. Lower <paramref name="priority"/> wins when
-        /// multiple checks hit (0 = highest priority).
-        /// Omit <paramref name="layerMask"/> to use the detector's default wall layer.
-        /// Set <paramref name="triggerInteraction"/> to <see cref="QueryTriggerInteraction.Collide"/>
-        /// to detect trigger colliders (e.g. climbable surfaces).
-        /// </summary>
-        public void AddCheck(string id, Vector3 direction, float distance, int priority,
-            CastType type, float radius = 0, LayerMask layerMask = default,
-            QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Ignore)
+        public void AddRay(string id, Vector3 direction, float distance, int priority = 0) =>
+            AddCheck(WallCheck.Ray(id, direction, distance, priority));
+
+        public void AddSphere(string id, Vector3 direction, float distance, float radius, int priority = 0) =>
+            AddCheck(WallCheck.Sphere(id, direction, distance, radius, priority));
+
+        public void AddMovementRay(string id, float distance, int priority = 0) =>
+            AddCheck(WallCheck.Movement(id, distance, priority));
+
+        public void AddMovementSphere(string id, float distance, float radius, int priority = 0)
         {
-            var check = new WallCheck(id, direction, distance, priority, type, radius,
-                ResolveLayerMask(layerMask), triggerInteraction);
-            RegisterCheck(check);
+            var check = WallCheck.Movement(id, distance, priority);
+            check.AsSphere(radius);
+            AddCheck(check);
         }
 
-        /// <summary>
-        /// Register a wall check that dynamically shoots in the player's movement direction.
-        /// </summary>
-        public void AddMovementCheck(string id, float distance, int priority,
-            CastType type, float radius = 0, LayerMask layerMask = default,
-            QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Ignore)
-        {
-            // Pass Vector3.zero as a placeholder since the direction is dynamic
-            var check = new WallCheck(id, Vector3.zero, distance, priority, type, radius,
-                ResolveLayerMask(layerMask), triggerInteraction, useMovementDirection: true);
+        // ─── Tick ───
 
-            RegisterCheck(check);
-        }
-
-        // ─── Tick ─── \\
-
-        /// <summary>
-        /// Casts all registered checks and derives wall data from the best hit.
-        /// Pass the player's current movement/velocity direction here.
-        /// </summary>
         public void Tick(Vector3 movementDirection = new())
         {
-            if (IsInWallJumpGracePeriod())
+            if (Time.time - _lastWallJumpTime < _wallJumpGracePeriod)
             {
-                ClearChecks();
-                ResetWall();
+                ResetHits();
+                Hit = DetectionHit.None;
                 return;
             }
 
-            // Pass the direction into the casting helper
-            CastRegisteredChecks(movementDirection);
+            Vector3 normalizedMovement = movementDirection.normalized;
+            CastChecks(RayOrigin, check =>
+                check.UseMovementDirection
+                    ? normalizedMovement
+                    : _playerObject.TransformDirection(check.Direction));
 
-            if (TryGetBestHit(out RaycastHit bestHit))
+            if (TryGetBestHit(out RaycastHit rawHit))
             {
-                WallNormal = bestHit.normal;
-                WallHit = bestHit;
+                Vector3 wallNormal = rawHit.normal;
+                Vector3 velocityOnWall = Vector3.ProjectOnPlane(GetComponent<Rigidbody>().linearVelocity, wallNormal);
+                Vector3 wallForward = velocityOnWall.sqrMagnitude > 0.01f
+                    ? velocityOnWall.normalized
+                    : Vector3.ProjectOnPlane(_playerObject.forward, wallNormal).normalized;
 
-                Vector3 velocityOnWall = Vector3.ProjectOnPlane(GetComponent<Rigidbody>().linearVelocity, WallNormal);
-                if (velocityOnWall.sqrMagnitude > 0.01f)
-                    WallForward = velocityOnWall.normalized;
-                else
-                    WallForward = Vector3.ProjectOnPlane(_playerObject.forward, WallNormal).normalized;
+                Hit = new DetectionHit(rawHit, forward: wallForward);
             }
             else
             {
-                ResetWall();
-                ClearChecks();
+                Hit = DetectionHit.None;
+                ResetHits();
             }
         }
 
         public void RegisterJumpTime() => _lastWallJumpTime = Time.time;
 
-        // ─── Private helpers ─── \\
+        // ─── Private ───
 
-        private bool IsInWallJumpGracePeriod()
-        {
-            return Time.time - _lastWallJumpTime < _wallJumpGracePeriod;
-        }
-
-        private void CastRegisteredChecks(Vector3 movementDirection = new())
-        {
-            Vector3 origin = RayOrigin;
-            // Normalize to ensure accurate ray distances
-            Vector3 normalizedMovement = movementDirection.normalized;
-
-            for (int i = 0; i < Checks.Count; i++)
-            {
-                WallCheck check = Checks[i];
-
-                // CHOOSE DIRECTION: Use movement vector if flagged, otherwise fall back to player facing
-                Vector3 worldDir;
-                //if (check.UseMovementDirection && normalizedMovement != Vector3.zero)
-                if (check.UseMovementDirection)
-                {
-                    worldDir = normalizedMovement;
-                }
-                else
-                {
-                    worldDir = _playerObject.TransformDirection(check.Direction);
-                }
-
-                bool hit;
-                RaycastHit hitInfo;
-                Ray ray = new(origin, worldDir);
-
-                if (check.Type == CastType.SphereCast)
-                {
-                    hit = Physics.SphereCast(ray, check.Radius, out hitInfo,
-                        check.Distance, check.LayerMask, check.TriggerInteraction);
-                }
-                else
-                {
-                    hit = Physics.Raycast(ray, out hitInfo,
-                        check.Distance, check.LayerMask, check.TriggerInteraction);
-                }
-
-                check.IsHit = hit;
-                check.HitInfo = hitInfo;
-            }
-        }
-
-        /// <summary>
-        /// Returns the highest-priority hit.
-        /// </summary>
         private bool TryGetBestHit(out RaycastHit bestHit)
         {
             for (int i = 0; i < Checks.Count; i++)
             {
                 if (Checks[i].IsHit)
                 {
-                    bestHit = Checks[i].HitInfo;
+                    bestHit = Checks[i].Hit;
                     return true;
                 }
             }
@@ -160,61 +90,47 @@ namespace Entities.Player.Detection
             return false;
         }
 
-        private void ResetWall()
-        {
-            WallNormal = Vector3.zero;
-            WallForward = Vector3.zero;
-            WallHit = default;
-        }
-
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
             if (_playerObject == null) return;
 
-            Vector3 origin = RayOrigin; //
-
-            // Try to find a Rigidbody to preview movement direction live in the Editor scene view
+            Vector3 origin = RayOrigin;
             Vector3 stateMachineMoveDir = Vector3.zero;
-            if (Application.isPlaying && TryGetComponent(out PlayerStateMachine psm))
-            {
-                stateMachineMoveDir = psm.MoveDirection.normalized;
-            }
 
-            for (int i = 0; i < Checks.Count; i++) //
+            if (Application.isPlaying && TryGetComponent(out PlayerStateMachine psm))
+                stateMachineMoveDir = psm.MoveDirection.normalized;
+
+            for (int i = 0; i < Checks.Count; i++)
             {
-                WallCheck check = Checks[i]; //
+                WallCheck check = Checks[i];
                 Vector3 worldDir;
 
-                // Match your CastRegisteredChecks logic so visuals match real physics!
                 if (check.UseMovementDirection)
                 {
-                    worldDir = (stateMachineMoveDir != Vector3.zero) ? stateMachineMoveDir : _playerObject.forward;
+                    worldDir = stateMachineMoveDir != Vector3.zero ? stateMachineMoveDir : _playerObject.forward;
                     Gizmos.color = Color.pink;
                 }
                 else
                 {
-                    worldDir = _playerObject.TransformDirection(check.Direction); //
+                    worldDir = _playerObject.TransformDirection(check.Direction);
+                    Gizmos.color = check.IsHit ? Color.green : Color.red;
                 }
 
-                if (!check.UseMovementDirection)
-                    Gizmos.color = check.IsHit ? Color.green : Color.red; //
-                Gizmos.DrawRay(origin, worldDir * check.Distance); //
+                Gizmos.DrawRay(origin, worldDir * check.Distance);
 
-                if (check.Type == CastType.SphereCast) //
-                {
-                    Gizmos.DrawWireSphere(origin + worldDir * check.Distance, check.Radius); //
-                }
+                if (check.CastType == CastType.SphereCast)
+                    Gizmos.DrawWireSphere(origin + worldDir * check.Distance, check.Radius);
             }
 
-            if (WallNormal == Vector3.zero) return; //
+            if (!Hit.IsHit) return;
 
-            Gizmos.color = Color.magenta; //
-            Gizmos.DrawSphere(WallHit.point, 0.05f); //
-            Gizmos.DrawRay(WallHit.point, WallNormal * 0.5f); //
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawSphere(Hit.Point, 0.05f);
+            Gizmos.DrawRay(Hit.Point, Hit.Normal * 0.5f);
 
-            Gizmos.color = Color.blue; //
-            Gizmos.DrawRay(origin, WallForward * 1.0f); //
+            Gizmos.color = Color.blue;
+            Gizmos.DrawRay(origin, Hit.Forward * 1.0f);
         }
 #endif
     }

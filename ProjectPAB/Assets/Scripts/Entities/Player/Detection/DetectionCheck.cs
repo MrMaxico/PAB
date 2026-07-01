@@ -8,43 +8,86 @@ namespace Entities.Player.Detection
         SphereCast,
     }
 
-    public abstract class DetectionCheck
+    public readonly struct DetectionHit
     {
-        public string Id { get; }
+        public static readonly DetectionHit None = default;
 
-        public Vector3 Direction { get; }
+        public bool IsHit { get; }
+        public RaycastHit RawHit { get; }
 
-        public CastType Type { get; }
+        // ─── RaycastHit passthrough ───
+        public Vector3 Point => RawHit.point;
+        public Vector3 Normal => RawHit.normal;
+        public float Distance => RawHit.distance;
+        public Collider Collider => RawHit.collider;
+        public GameObject GameObject => RawHit.collider.gameObject;
+        public Transform Transform => RawHit.transform;
+        public Rigidbody Rigidbody => RawHit.rigidbody;
+        public LayerMask Layer => 1 << RawHit.collider.gameObject.layer;
 
-        public float Distance { get; }
+        // ─── Surface motion ───
+        public Vector3 SurfaceVelocity => Rigidbody != null ? Rigidbody.linearVelocity : Vector3.zero;
+        public Vector3 SurfaceAngularVelocity => Rigidbody != null ? Rigidbody.angularVelocity : Vector3.zero;
 
-        public float Radius { get; }
+        // ─── Slope ───
+        public float SlopeAngle { get; }
+        public bool IsSloped => SlopeAngle > 0.1f;
 
-        /// <summary>Lower runs first and wins priority ties.</summary>
-        public int Priority { get; }
+        // ─── Directional ───
+        // Wall: direction along the wall matching movement. Ground: unused (zero).
+        public Vector3 Forward { get; }
 
-        /// <summary>Layer mask used for this specific check.</summary>
-        public LayerMask LayerMask { get; }
+        public DetectionHit(RaycastHit rawHit, float slopeAngle = 0f, Vector3 forward = default)
+        {
+            IsHit = true;
+            RawHit = rawHit;
+            SlopeAngle = slopeAngle;
+            Forward = forward;
+        }
+    }
 
-        /// <summary>Whether this check detects trigger colliders.</summary>
-        public QueryTriggerInteraction TriggerInteraction { get; }
+    public class DetectionCheck
+    {
+        public string ID { get; }
+        public Vector3 Direction { get; private set; }
+        public CastType CastType { get; private set; }
+        public float Distance { get; private set; }
+        public float Radius { get; private set; }
+        public int Priority { get; private set; }
+        public LayerMask LayerMask { get; private set; }
+        public QueryTriggerInteraction TriggerInteraction { get; private set; }
 
         public bool IsHit { get; set; }
-        public RaycastHit HitInfo { get; set; }
+        public RaycastHit Hit { get; set; }
 
-        public bool UseMovementDirection { get; }
-
-        protected DetectionCheck(string id, Vector3 direction, float distance, int priority, CastType type, float radius = 0, LayerMask layerMask = default, QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Ignore, bool useMovementDirection = false)
+        public DetectionCheck(string id)
         {
-            Id = id;
-            Direction = direction;
-            Type = type;
-            Distance = distance;
+            ID = id;
+            this.CastType = CastType.Raycast;
+            TriggerInteraction = QueryTriggerInteraction.Ignore;
+        }
+
+        // ─── Static factories ───
+
+        public static DetectionCheck Ray(string id, Vector3 direction, float distance, int priority = 0) =>
+            new DetectionCheck(id).InDirection(direction).WithDistance(distance).AtPriority(priority);
+
+        public static DetectionCheck Sphere(string id, Vector3 direction, float distance, float radius, int priority = 0) =>
+            new DetectionCheck(id).InDirection(direction).WithDistance(distance).AsSphere(radius).AtPriority(priority);
+
+        // ─── Fluent API ───
+
+        public DetectionCheck InDirection(Vector3 direction) { Direction = direction; return this; }
+        public DetectionCheck WithDistance(float distance) { Distance = distance; return this; }
+        public DetectionCheck AtPriority(int priority) { Priority = priority; return this; }
+        public DetectionCheck OnLayer(LayerMask layer) { LayerMask = layer; return this; }
+        public DetectionCheck IncludeTriggers() { TriggerInteraction = QueryTriggerInteraction.Collide; return this; }
+
+        public DetectionCheck AsSphere(float radius)
+        {
+            CastType = CastType.SphereCast;
             Radius = radius;
-            Priority = priority;
-            LayerMask = layerMask;
-            TriggerInteraction = triggerInteraction;
-            UseMovementDirection = useMovementDirection;
+            return this;
         }
     }
 }

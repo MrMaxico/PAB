@@ -17,7 +17,7 @@ namespace Entities.Player.States
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 #endif
 
-            Ctx.JumpDirection = Ctx.WallDetector.WallNormal + Vector3.up;
+            Ctx.JumpDirection = Ctx.WallDetector.Hit.Normal + Vector3.up;
 
             Ctx.Rigidbody.linearVelocity = Vector3.zero;
 
@@ -26,7 +26,7 @@ namespace Entities.Player.States
             else
                 Ctx.Rigidbody.useGravity = true;
 
-            Quaternion faceFromWall = Quaternion.LookRotation(Ctx.WallDetector.WallNormal, Vector3.up);
+            Quaternion faceFromWall = Quaternion.LookRotation(Ctx.WallDetector.Hit.Normal, Vector3.up);
             Ctx.SnapModelRotation = Quaternion.Euler(faceFromWall.eulerAngles.x, faceFromWall.eulerAngles.y, 0);
         }
 
@@ -49,7 +49,7 @@ namespace Entities.Player.States
             {
                 Ctx.Rigidbody.useGravity = true;
 
-                Quaternion faceFromWall = Quaternion.LookRotation(Ctx.WallDetector.WallNormal, Vector3.up);
+                Quaternion faceFromWall = Quaternion.LookRotation(Ctx.WallDetector.Hit.Normal, Vector3.up);
                 Ctx.SnapModelRotation = Quaternion.Euler(faceFromWall.eulerAngles.x, faceFromWall.eulerAngles.y, 0);
             }
         }
