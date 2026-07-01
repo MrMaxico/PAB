@@ -14,7 +14,6 @@ namespace Entities.Player.States
             StateKey = PlayerStates.WallWalking;
         }
 
-        /// <summary>Locked on enter — which direction along the wall we run.</summary>
         private Vector3 _runDirection;
 
         public override void EnterState(PlayerBaseState previousState)
@@ -22,14 +21,6 @@ namespace Entities.Player.States
 #if UNITY_EDITOR
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 #endif
-
-            // Lock the run direction based on which side of the wall we hit
-            //WalledState wall = (WalledState)CurrentSuperState;
-
-            //if (wall.WallWalkSideRightLeft)
-            //    Ctx.WallDetector.AddCheck(RightCheck, Vector3.right, 0.8f, 1, CastType.Raycast);
-            //else
-            //    Ctx.WallDetector.AddCheck(LeftCheck, Vector3.left, 0.8f, 2, CastType.Raycast);
 
             Ctx.WallDetector.Tick();
 
@@ -89,7 +80,7 @@ namespace Entities.Player.States
 
         private void HandleWallRunning()
         {
-            Vector3 targetVelocity = _runDirection * Ctx.PlayerContext.WallRunSpeed;
+            Vector3 targetVelocity = _runDirection * Ctx.PlayerContext.WallRunSpeed + Ctx.PlatformVelocity;
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * 20f);
         }
 

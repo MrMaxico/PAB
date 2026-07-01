@@ -33,16 +33,6 @@ namespace Entities.Player.States
             Ctx.transform.position = Ctx.WallDetector.Hit.Point + Vector3.up * 1.5f;
         }
 
-        public override void FixedUpdateState()
-        {
-
-        }
-
-        public override void LateUpdateState()
-        {
-
-        }
-
         #endregion
 
         #region Inputs

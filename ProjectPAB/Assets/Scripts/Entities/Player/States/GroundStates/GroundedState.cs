@@ -1,3 +1,4 @@
+using Entities.Player.Detection;
 using Entities.Player.States.Base;
 using Systems.Input;
 using UnityEngine;
@@ -64,6 +65,9 @@ namespace Entities.Player.States
             Ctx.RailDetector.RemoveCheck(RailCheck);
 
             Ctx.Rigidbody.useGravity = true;
+
+            Ctx.PlatformVelocity = Vector3.zero;
+            _trackedPlatformTransform = null;
         }
 
         #region MonoBehaviours
@@ -76,8 +80,12 @@ namespace Entities.Player.States
                 Ctx.Stamina = Ctx.MaxStamina;
         }
 
+        private Transform _trackedPlatformTransform;
+
         public override void FixedUpdateState()
         {
+            UpdatePlatformVelocity();
+
             Vector3 rawInput = (Ctx.Orientation.forward * _currentInput.y) + (Ctx.Orientation.right * _currentInput.x);
 
             Vector3 groundNormal = Ctx.GroundDetector.Hit.Normal == Vector3.zero ? Vector3.up : Ctx.GroundDetector.Hit.Normal;
@@ -90,6 +98,27 @@ namespace Entities.Player.States
             }
 
             SnapToGround();
+        }
+
+        private void UpdatePlatformVelocity()
+        {
+            DetectionHit hit = Ctx.GroundDetector.Hit;
+            IMovingPlatform platform = hit.Platform;
+            bool isTrackingPlatform = platform != null && hit.Transform == _trackedPlatformTransform;
+
+            Vector3 platformVelocity = isTrackingPlatform
+                ? platform.DeltaThisStep / Time.fixedDeltaTime
+                : Vector3.zero;
+
+            Ctx.PlatformVelocity = new Vector3(platformVelocity.x, 0f, platformVelocity.z);
+
+            if (isTrackingPlatform)
+            {
+                Vector3 vel = Ctx.Rigidbody.linearVelocity;
+                Ctx.Rigidbody.linearVelocity = new Vector3(vel.x, platformVelocity.y, vel.z);
+            }
+
+            _trackedPlatformTransform = hit.Transform;
         }
 
         #endregion

@@ -1,3 +1,4 @@
+using Entities.Player.Detection;
 using Entities.Player.States.Base;
 using UnityEngine;
 
@@ -70,6 +71,8 @@ namespace Entities.Player.States
 
         public override void FixedUpdateState()
         {
+            UpdatePlatformVelocity();
+
             if (!Ctx.WallDetector.HasAnyHit()) return;
 
             Vector3 playerToWallPoint = Ctx.transform.position - Ctx.WallDetector.Hit.Point;
@@ -92,6 +95,21 @@ namespace Entities.Player.States
         #region Inputs
 
         #endregion
+
+        private Transform _trackedPlatformTransform;
+
+        private void UpdatePlatformVelocity()
+        {
+            DetectionHit hit = Ctx.WallDetector.Hit;
+            IMovingPlatform platform = hit.Platform;
+            bool isTrackingPlatform = platform != null && hit.Transform == _trackedPlatformTransform;
+
+            Ctx.PlatformVelocity = isTrackingPlatform
+                ? platform.DeltaThisStep / Time.fixedDeltaTime
+                : Vector3.zero;
+
+            _trackedPlatformTransform = hit.Transform;
+        }
 
         private bool CheckAngle()
         {

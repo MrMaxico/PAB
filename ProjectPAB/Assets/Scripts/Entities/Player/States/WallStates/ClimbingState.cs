@@ -79,9 +79,11 @@ namespace Entities.Player.States
             Vector3 wallUpDir = Vector3.Cross(wallSideDir, activeWallNormal).normalized;
 
             Ctx.MoveDirection = (wallUpDir * _climbInput.y) + (wallSideDir * _climbInput.x);
-            Vector3 targetVelocity = Ctx.MoveDirection * Ctx.PlayerContext.ClimbSpeed;
 
-            Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * 15f);
+            Vector3 currentVel = Ctx.Rigidbody.linearVelocity;
+            Vector3 targetVelocity = Ctx.MoveDirection * Ctx.PlayerContext.ClimbSpeed + Ctx.PlatformVelocity;
+
+            Ctx.Rigidbody.linearVelocity = Vector3.Lerp(currentVel, targetVelocity, Time.fixedDeltaTime * 15f);
 
             Quaternion faceWallRotation = Quaternion.LookRotation(-activeWallNormal, Vector3.up);
             Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.SmoothModelRotation, faceWallRotation, Time.fixedDeltaTime * 15f);

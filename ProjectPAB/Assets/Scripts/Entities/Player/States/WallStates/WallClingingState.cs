@@ -54,6 +54,13 @@ namespace Entities.Player.States
             }
         }
 
+        public override void FixedUpdateState()
+        {
+            // No input-driven movement while clinging - target is purely the wall's own velocity,
+            // so a stationary wall still converges to zero (unchanged behavior).
+            Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, Ctx.PlatformVelocity, Time.fixedDeltaTime * 15f);
+        }
+
         #endregion
 
         #region Inputs

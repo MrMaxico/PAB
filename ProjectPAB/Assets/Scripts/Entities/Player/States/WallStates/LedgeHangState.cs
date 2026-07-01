@@ -52,7 +52,7 @@ namespace Entities.Player.States
 
             Ctx.MoveDirection = (wallUpDir * 0) + (wallSideDir * _climbInput.x);
 
-            Vector3 targetVelocity = Ctx.MoveDirection * Ctx.PlayerContext.ClimbSpeed;
+            Vector3 targetVelocity = Ctx.MoveDirection * Ctx.PlayerContext.ClimbSpeed + Ctx.PlatformVelocity;
 
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * 15f);
         }

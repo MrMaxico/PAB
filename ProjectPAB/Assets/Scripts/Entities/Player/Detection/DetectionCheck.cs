@@ -23,6 +23,8 @@ namespace Entities.Player.Detection
         public GameObject GameObject => RawHit.collider.gameObject;
         public Transform Transform => RawHit.transform;
         public Rigidbody Rigidbody => RawHit.rigidbody;
+        public IMovingPlatform Platform => RawHit.collider != null ? RawHit.collider.GetComponentInParent<IMovingPlatform>() : null;
+        public Vector3 Velocity => Rigidbody != null ? Rigidbody.linearVelocity : Vector3.zero;
         public LayerMask Layer => 1 << RawHit.collider.gameObject.layer;
 
         // ─── Surface motion ───

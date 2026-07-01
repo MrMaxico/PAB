@@ -139,6 +139,8 @@ namespace Entities.Player
 
         public Vector3 MoveDirection { get; set; }
 
+        public Vector3 PlatformVelocity { get; set; }
+
         #endregion
 
         #region Step

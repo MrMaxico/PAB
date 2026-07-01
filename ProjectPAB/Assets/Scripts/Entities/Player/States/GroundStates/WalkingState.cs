@@ -92,9 +92,11 @@ namespace Entities.Player.States
         {
             Vector3 moveDir = Ctx.MoveDirection;
 
-            Vector3 targetVelocity = moveDir * Ctx.PlayerContext.WalkSpeed;
+            Vector3 currentVel = Ctx.Rigidbody.linearVelocity;
+            Vector3 targetVelocity = moveDir * Ctx.PlayerContext.WalkSpeed + Ctx.PlatformVelocity;
+            targetVelocity.y = currentVel.y;
             float accel = 20f;
-            Ctx.Rigidbody.linearVelocity = Vector3.Lerp(Ctx.Rigidbody.linearVelocity, targetVelocity, Time.fixedDeltaTime * accel);
+            Ctx.Rigidbody.linearVelocity = Vector3.Lerp(currentVel, targetVelocity, Time.fixedDeltaTime * accel);
 
             if (moveDir.magnitude > 0.1f)
             {

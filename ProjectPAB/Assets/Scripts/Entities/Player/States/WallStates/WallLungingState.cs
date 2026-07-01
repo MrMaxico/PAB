@@ -46,16 +46,6 @@ namespace Entities.Player.States
             Ctx.JumpToWalledTime -= Time.deltaTime;
         }
 
-        public override void FixedUpdateState()
-        {
-
-        }
-
-        public override void LateUpdateState()
-        {
-
-        }
-
         #endregion
 
         #region Inputs

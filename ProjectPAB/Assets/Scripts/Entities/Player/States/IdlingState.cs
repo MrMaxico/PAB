@@ -38,7 +38,8 @@ namespace Entities.Player.States
         private void HandleDeceleration()
         {
             Vector3 currentVel = Ctx.Rigidbody.linearVelocity;
-            Vector3 targetVel = new Vector3(0, currentVel.y, 0);
+            Vector3 platformVel = Ctx.PlatformVelocity;
+            Vector3 targetVel = new Vector3(platformVel.x, currentVel.y, platformVel.z);
             float decelerationSpeed = 15f;
             Ctx.Rigidbody.linearVelocity = Vector3.Lerp(currentVel, targetVel, Time.fixedDeltaTime * decelerationSpeed);
         }
