@@ -2,8 +2,10 @@ using UnityEngine;
 
 namespace Entities.Player.Detection
 {
-    public class WallDetector : BaseDetector<WallCheck>
+    public class WallDetector : BaseDetector<MovementCheck>
     {
+        [SerializeField] private bool DoDebug;
+
         [Header("References")]
         [SerializeField] private Transform _playerObject;
 
@@ -23,17 +25,17 @@ namespace Entities.Player.Detection
         // ─── Registration shorthands ───
 
         public void AddRay(string id, Vector3 direction, float distance, int priority = 0) =>
-            AddCheck(WallCheck.Ray(id, direction, distance, priority));
+            AddCheck(MovementCheck.Ray(id, direction, distance, priority));
 
         public void AddSphere(string id, Vector3 direction, float distance, float radius, int priority = 0) =>
-            AddCheck(WallCheck.Sphere(id, direction, distance, radius, priority));
+            AddCheck(MovementCheck.Sphere(id, direction, distance, radius, priority));
 
         public void AddMovementRay(string id, float distance, int priority = 0) =>
-            AddCheck(WallCheck.Movement(id, distance, priority));
+            AddCheck(MovementCheck.Movement(id, distance, priority));
 
         public void AddMovementSphere(string id, float distance, float radius, int priority = 0)
         {
-            var check = WallCheck.Movement(id, distance, priority);
+            var check = MovementCheck.Movement(id, distance, priority);
             check.AsSphere(radius);
             AddCheck(check);
         }
@@ -93,6 +95,8 @@ namespace Entities.Player.Detection
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
+            if (!DoDebug) return;
+
             if (_playerObject == null) return;
 
             Vector3 origin = RayOrigin;
@@ -103,7 +107,7 @@ namespace Entities.Player.Detection
 
             for (int i = 0; i < Checks.Count; i++)
             {
-                WallCheck check = Checks[i];
+                MovementCheck check = Checks[i];
                 Vector3 worldDir;
 
                 if (check.UseMovementDirection)

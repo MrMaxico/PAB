@@ -6,14 +6,6 @@ namespace Entities.Player.States
 {
     public class WalkingState : MovementBaseState
     {
-        // Step-up settings
-        private const float MaxStepHeight = 0.4f;
-        private const float StepCheckDepth = 0.5f;
-        private const float StepForwardBoost = 2f;
-        private const float CapsuleHalfHeight = 1f;
-        private const float StepCastRadius = 0.3f;
-        private const float StepUpGraceDuration = 0.15f;
-
         public WalkingState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.Walking;
@@ -49,9 +41,6 @@ namespace Entities.Player.States
         {
             HandleWalking();
 
-            if (TryStepUp())
-                return;
-
             if (Ctx.WallDetector.IsHit("Front"))
             {
                 Vector3 playerMoveDir = Ctx.Rigidbody.linearVelocity.normalized;
@@ -60,10 +49,8 @@ namespace Entities.Player.States
 
                 if (dotProduct < -0.5f)
                 {
-#if UNITY_EDITOR
-                    if (Ctx.DoDebug) Debug.Log("Trying to switch to jump from walking into a wall");
-#endif
-                    TrySwitchRootState(PlayerStates.Jumping);
+                    if (TrySwitchRootState(PlayerStates.Jumping))
+                        return;
                 }
             }
         }
@@ -105,56 +92,6 @@ namespace Entities.Player.States
 
                 Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.PlayerModel.rotation, targetRotation, Time.fixedDeltaTime * 10f);
             }
-        }
-
-        private bool TryStepUp()
-        {
-            Vector3 origin = Ctx.Transform.position;
-            Vector3 footOrigin = origin + Vector3.down * CapsuleHalfHeight;
-            Vector3 forward = Ctx.MoveDirection != Vector3.zero
-                ? Ctx.MoveDirection.normalized
-                : Ctx.Orientation.forward;
-
-            // SphereCast at foot level — catches stairs approached at an angle
-            Vector3 footCheckOrigin = footOrigin + Vector3.up * (StepCastRadius + 0.05f);
-            if (!Physics.SphereCast(footCheckOrigin, StepCastRadius, forward, out RaycastHit footHit, StepCheckDepth))
-            {
-                return false;
-            }
-
-            Debug.DrawRay(footCheckOrigin, forward * StepCheckDepth, Color.yellow);
-
-            // Raycast at step height — is the space above the step clear?
-            Vector3 upperOrigin = footOrigin + Vector3.up * MaxStepHeight;
-            Debug.DrawRay(upperOrigin, forward * StepCheckDepth, Color.red);
-            if (Physics.Raycast(upperOrigin, forward, StepCheckDepth))
-            {
-                return false;
-            }
-
-            // Downcast to find the actual step surface
-            Vector3 downCastOrigin = upperOrigin + forward * StepCheckDepth;
-            Debug.DrawRay(downCastOrigin, Vector3.down * MaxStepHeight, Color.blue);
-            if (!Physics.Raycast(downCastOrigin, Vector3.down, out RaycastHit stepHit, MaxStepHeight))
-            {
-                return false;
-            }
-
-            float heightDifference = stepHit.point.y - footOrigin.y;
-
-            if (heightDifference < 0.01f || heightDifference > MaxStepHeight)
-            {
-                return false;
-            }
-
-            Vector3 targetPosition = new(origin.x, stepHit.point.y + CapsuleHalfHeight + 0.05f, origin.z);
-            Ctx.Rigidbody.MovePosition(targetPosition);
-
-            Ctx.Rigidbody.AddForce(forward * StepForwardBoost, ForceMode.VelocityChange);
-
-            // Tell GroundedState not to snap us back down
-            Ctx.StepUpGraceTime = StepUpGraceDuration;
-            return true;
         }
 
         #endregion

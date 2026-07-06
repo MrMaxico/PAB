@@ -14,6 +14,8 @@ namespace Entities.Player.States
         private const string RightCheck = "Right";
         private const string LeftCheck = "Left";
 
+        private const string WaterCheck = "Water";
+
         public JumpingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Jumping;
@@ -33,6 +35,7 @@ namespace Entities.Player.States
 
             Ctx.WallDetector.AddSphere(FrontCheck, Vector3.forward, 0.7f, 0.3f);
 
+            Ctx.WaterDetector.AddMovementSphere(WaterCheck, 1f, 0.1f);
 
             if (Factory.HasState(PlayerStates.WallWalking))
             {
@@ -127,6 +130,15 @@ namespace Entities.Player.States
 
         public override void CheckSwitchState()
         {
+            if (Factory.HasState(PlayerStates.Waterborne))
+            {
+                if (Ctx.WaterDetector.HasAnyHit())
+                {
+                    TrySwitchState(PlayerStates.Waterborne);
+                    return;
+                }
+            }
+
             if (Factory.HasState(PlayerStates.Falling))
             {
                 if (Ctx.JumpToFallingTime <= 0)

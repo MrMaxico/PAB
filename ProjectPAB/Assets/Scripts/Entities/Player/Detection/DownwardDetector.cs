@@ -4,10 +4,17 @@ namespace Entities.Player.Detection
 {
     public abstract class DownwardDetector : BaseDetector<DetectionCheck>
     {
+        [SerializeField] private bool DoDebug;
+
         [Header("Settings")]
         [SerializeField] public LayerMask _detectionLayer;
+        public LayerMask DetectionLayer => _detectionLayer;
+        protected override LayerMask DefaultLayerMask => _detectionLayer;
+
         [SerializeField] private float _maxSlopeAngle = 45f;
+        public float MaxSlopeAngle => _maxSlopeAngle;
         [SerializeField] private float _originOffset = 0.1f;
+
 
         [Header("Timing")]
         [SerializeField] private float _gracePeriod = 0.3f;
@@ -18,8 +25,6 @@ namespace Entities.Player.Detection
         [SerializeField] private float _coyoteTimeCounter;
         public float CoyoteTimeCounter => _coyoteTimeCounter;
 
-        public LayerMask DetectionLayer => _detectionLayer;
-        protected override LayerMask DefaultLayerMask => _detectionLayer;
 
         private float _lastJumpTime;
         private Vector3 RayOrigin => transform.position + Vector3.up * _originOffset;
@@ -67,14 +72,24 @@ namespace Entities.Player.Detection
 
         private bool TryGetBestHit(out RaycastHit bestHit)
         {
-            for (int i = 0; i < Checks.Count; i++)
+            foreach (var check in Checks)
             {
-                if (Checks[i].IsHit && Vector3.Angle(Vector3.up, Checks[i].Hit.normal) <= _maxSlopeAngle)
+                if (check.IsHit && Vector3.Angle(Vector3.up, check.Hit.normal) <= _maxSlopeAngle)
                 {
-                    bestHit = Checks[i].Hit;
+                    bestHit = check.Hit;
                     return true;
                 }
             }
+
+            foreach (var check in Checks)
+            {
+                if (check.IsHit)
+                {
+                    bestHit = check.Hit;
+                    return true;
+                }
+            }
+
             bestHit = default;
             return false;
         }
@@ -82,6 +97,8 @@ namespace Entities.Player.Detection
 #if UNITY_EDITOR
         protected virtual void OnDrawGizmosSelected()
         {
+            if (!DoDebug) return;
+
             Vector3 origin = RayOrigin;
 
             for (int i = 0; i < Checks.Count; i++)

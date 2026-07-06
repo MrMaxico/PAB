@@ -7,9 +7,11 @@ namespace Entities.Player.States
 {
     public class GroundedState : PlayerBaseState
     {
-        private const string GroundCheck = "Ground";
-        private const string RailCheck = "Rail";
-        private const string FrontCheck = "Front";
+        private const string GroundSphere = "GroundSphere";
+        private const string GroundRay = "GroundRay";
+
+        private const string Rail = "Rail";
+        private const string WallFront = "Front";
 
         private const float CapsuleHalfHeight = 1f;
         private const float SnapDownDistance = 0.5f;
@@ -28,11 +30,11 @@ namespace Entities.Player.States
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 #endif
 
-            Ctx.GroundDetector.AddSphere(GroundCheck, 0.8f, 0.5f);
+            Ctx.GroundDetector.AddSphere(GroundSphere, 0.8f, 0.5f);
 
-            Ctx.WallDetector.AddSphere(FrontCheck, Vector3.forward, 0.7f, 0.3f);
+            Ctx.WallDetector.AddSphere(WallFront, Vector3.forward, 0.7f, 0.3f);
 
-            Ctx.RailDetector.AddSphere(RailCheck, 1f, 0.35f);
+            Ctx.RailDetector.AddSphere(Rail, 1f, 0.35f);
 
             Ctx.GroundDetector.Tick();
             Ctx.WallDetector.Tick();
@@ -58,11 +60,11 @@ namespace Entities.Player.States
             if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
 #endif
 
-            Ctx.GroundDetector.RemoveCheck(GroundCheck);
+            Ctx.GroundDetector.RemoveCheck(GroundSphere);
 
-            Ctx.WallDetector.RemoveCheck(FrontCheck);
+            Ctx.WallDetector.RemoveCheck(WallFront);
 
-            Ctx.RailDetector.RemoveCheck(RailCheck);
+            Ctx.RailDetector.RemoveCheck(Rail);
 
             Ctx.Rigidbody.useGravity = true;
 
@@ -88,12 +90,23 @@ namespace Entities.Player.States
 
             Vector3 rawInput = (Ctx.Orientation.forward * _currentInput.y) + (Ctx.Orientation.right * _currentInput.x);
 
-            Vector3 groundNormal = Ctx.GroundDetector.Hit.Normal == Vector3.zero ? Vector3.up : Ctx.GroundDetector.Hit.Normal;
+            Vector3 movementNormal = Vector3.up;
 
-            Ctx.MoveDirection = Vector3.ProjectOnPlane(rawInput, groundNormal).normalized;
-
-            if (Ctx.GroundDetector.Hit.IsSloped)
+            if (Ctx.GroundDetector.Hit.Normal != Vector3.zero)
             {
+                float surfaceAngle = Vector3.Angle(Vector3.up, Ctx.GroundDetector.Hit.Normal);
+
+                if (surfaceAngle <= Ctx.GroundDetector.MaxSlopeAngle)
+                {
+                    movementNormal = Ctx.GroundDetector.Hit.Normal;
+                }
+            }
+
+            Ctx.MoveDirection = Vector3.ProjectOnPlane(rawInput, movementNormal).normalized;
+
+            if (Ctx.GroundDetector.Hit.IsSloped && Vector3.Angle(Vector3.up, Ctx.GroundDetector.Hit.Normal) <= 45f)
+            {
+                Vector3 groundNormal = Ctx.GroundDetector.Hit.Normal;
                 Ctx.Rigidbody.AddForce(-groundNormal * 30f, ForceMode.Force);
             }
 
@@ -166,30 +179,6 @@ namespace Entities.Player.States
 
         public override void CheckSwitchState()
         {
-            if (Factory.HasState(PlayerStates.Falling))
-            {
-                if (!Ctx.GroundDetector.HasAnyHit() && !Ctx.RailDetector.HasAnyHit())
-                {
-                    // Don't count frames during step-up grace period
-                    if (Ctx.StepUpGraceTime > 0f)
-                    {
-                        _ungroundedTimer = 0f;
-                        return;
-                    }
-
-                    _ungroundedTimer += Time.fixedDeltaTime;
-                    if (_ungroundedTimer >= UngroundedTolerance)
-                    {
-                        if (TrySwitchState(PlayerStates.Falling))
-                            return;
-                    }
-                }
-                else
-                {
-                    _ungroundedTimer = 0f;
-                }
-            }
-
             if (Factory.HasState(PlayerStates.Railed))
             {
                 if (Ctx.RailDetector.HasAnyHit())
@@ -198,6 +187,31 @@ namespace Entities.Player.States
                         return;
                 }
             }
+
+            if (Factory.HasState(PlayerStates.Falling))
+            {
+                if (!Ctx.GroundDetector.HasAnyHit())
+                {
+                    //if (Ctx.StepUpGraceTime > 0f)
+                    //{
+                    //    _ungroundedTimer = 0f;
+                    //    return;
+                    //}
+
+                    //_ungroundedTimer += Time.fixedDeltaTime;
+                    //if (_ungroundedTimer >= UngroundedTolerance)
+                    //{
+                    if (TrySwitchState(PlayerStates.Falling))
+                        return;
+                    //}
+                }
+                else
+                {
+                    _ungroundedTimer = 0f;
+                }
+            }
+
+
         }
 
         #region Private Helpers

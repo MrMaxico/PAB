@@ -14,6 +14,7 @@ namespace Entities.Player
         Jumping,
         Walled,
         Railed,
+        Waterborne,
 
         // Movement Sub-States
         Idling,
@@ -60,6 +61,7 @@ namespace Entities.Player
             RegisterState(PlayerStates.Jumping, new JumpingState(_context, this));
             RegisterState(PlayerStates.Walled, new WalledState(_context, this));
             RegisterState(PlayerStates.Railed, new RailedState(_context, this));
+            RegisterState(PlayerStates.Waterborne, new WaterborneState(_context, this));
 
             // --- Locomotion States ---
             RegisterState(PlayerStates.Idling, new IdlingState(_context, this));

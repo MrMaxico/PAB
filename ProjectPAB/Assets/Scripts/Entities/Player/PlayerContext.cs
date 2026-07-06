@@ -43,6 +43,9 @@ namespace Entities.Player
         [SerializeField] private RailDetector _railDetector;
         public RailDetector RailDetector => _railDetector;
 
+        [SerializeField] private WaterDetector _waterDetector;
+        public WaterDetector WaterDetector => _waterDetector;
+
         [Header("Camera")]
         [SerializeField] private Transform _cameraHolder;
         public Transform CameraHolder => _cameraHolder;
