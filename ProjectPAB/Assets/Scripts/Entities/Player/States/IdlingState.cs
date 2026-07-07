@@ -6,8 +6,6 @@ namespace Entities.Player.States
 {
     public class IdlingState : MovementBaseState
     {
-        private Vector2 _moveInput;
-
         public IdlingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Idling;
@@ -35,6 +33,10 @@ namespace Entities.Player.States
                 HandleDeceleration();
         }
 
+        #endregion
+
+        #region State Logic
+
         private void HandleDeceleration()
         {
             Vector3 currentVel = Ctx.Rigidbody.linearVelocity;
@@ -48,14 +50,14 @@ namespace Entities.Player.States
 
         #region Inputs
 
+        private Vector2 _moveInput;
+
         protected override void HandleInputAction(IInputProvider input)
         {
             _moveInput = input.MovementState.RawInputValue;
         }
 
         #endregion
-
-        #region State Logic
 
         public override void CheckSwitchState()
         {
@@ -68,7 +70,5 @@ namespace Entities.Player.States
                 }
             }
         }
-
-        #endregion
     }
 }

@@ -1,4 +1,5 @@
 using Entities.Player.States.Base;
+using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
@@ -22,6 +23,7 @@ namespace Entities.Player.States
 
             SetLock(true);
         }
+
         public override void ExitState(PlayerBaseState nextState)
         {
             Debug.LogError($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
@@ -46,10 +48,26 @@ namespace Entities.Player.States
 
         #region Inputs
 
+        protected override void HandleInputAction(IInputProvider input)
+        {
+            if (input.DiveState.UsePress())
+            {
+                SetLock(false);
+            }
+        }
+
         #endregion
 
-        #region StateLogic
-
-        #endregion
+        public override void CheckSwitchState()
+        {
+            if (!IsLocked)
+            {
+                if (Factory.HasState(PlayerStates.Idling))
+                {
+                    if (TrySwitchState(PlayerStates.Idling))
+                        return;
+                }
+            }
+        }
     }
 }

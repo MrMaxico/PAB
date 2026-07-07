@@ -48,10 +48,6 @@ namespace Entities.Player.States
 
         #endregion
 
-        #region Inputs
-
-        #endregion
-
         public override void CheckSwitchState()
         {
             if (Factory.HasState(PlayerStates.Climbing))

@@ -21,8 +21,6 @@ namespace Entities.Player.States
             StateKey = PlayerStates.Jumping;
         }
 
-        Rigidbody _rb;
-
         public override void EnterState(PlayerBaseState previousState)
         {
 #if UNITY_EDITOR
@@ -67,12 +65,10 @@ namespace Entities.Player.States
                 Ctx.RailDetector.RegisterJumpTime();
             }
 
-            _rb = Ctx.Rigidbody;
-
-            Vector3 vel = _rb.linearVelocity;
+            Vector3 vel = Ctx.Rigidbody.linearVelocity;
             vel.y = 0;
-            _rb.linearVelocity = vel;
-            _rb.AddForce(Ctx.JumpDirection * 7f, ForceMode.Impulse);
+            Ctx.Rigidbody.linearVelocity = vel;
+            Ctx.Rigidbody.AddForce(Ctx.JumpDirection * 7f, ForceMode.Impulse);
         }
 
         public override void ExitState(PlayerBaseState nextState)
@@ -96,10 +92,6 @@ namespace Entities.Player.States
             Ctx.WalkJumpToWalledTime -= Time.deltaTime;
             Ctx.JumpToWalledTime -= Time.deltaTime;
         }
-
-        public override void FixedUpdateState() { }
-
-        public override void LateUpdateState() { }
 
         #endregion
 

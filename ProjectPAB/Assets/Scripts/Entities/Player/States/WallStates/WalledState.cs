@@ -92,9 +92,7 @@ namespace Entities.Player.States
 
         #endregion
 
-        #region Inputs
-
-        #endregion
+        #region State Logic
 
         private Transform _trackedPlatformTransform;
 
@@ -116,6 +114,8 @@ namespace Entities.Player.States
             float angle = Vector3.Angle(Ctx.Orientation.forward, -Ctx.WallDetector.Hit.Normal);
             return angle > 35f;
         }
+
+        #endregion
 
         public override void InitializeSubState()
         {

@@ -11,16 +11,11 @@ namespace Entities.Player.States
             StateKey = PlayerStates.Walking;
         }
 
-        private Vector2 _moveInput;
-        private float _moveDuration;
-
         public override void EnterState(PlayerBaseState previousState)
         {
 #if UNITY_EDITOR
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 #endif
-
-            _moveDuration = 0f;
         }
 
         public override void ExitState(PlayerBaseState nextState)
@@ -31,11 +26,6 @@ namespace Entities.Player.States
         }
 
         #region MonoBehaveiours
-
-        public override void UpdateState()
-        {
-            _moveDuration += Time.deltaTime;
-        }
 
         public override void FixedUpdateState()
         {

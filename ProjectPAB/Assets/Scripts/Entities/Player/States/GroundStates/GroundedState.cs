@@ -121,6 +121,8 @@ namespace Entities.Player.States
 
         #endregion
 
+        #region State Logic
+
         private Transform _trackedPlatformTransform;
         private float _surfaceVerticalVelocity;
 
@@ -254,6 +256,8 @@ namespace Entities.Player.States
                 }
             }
         }
+
+        #endregion
 
         #region Inputs
 

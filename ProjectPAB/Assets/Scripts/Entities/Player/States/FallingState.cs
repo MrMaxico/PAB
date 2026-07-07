@@ -61,10 +61,6 @@ namespace Entities.Player.States
             Ctx.WallDetector.RemoveCheck(LeftCheck);
         }
 
-        #region MonoBehaviours
-
-        #endregion
-
         #region Inputs
 
         protected override void HandleInputAction(IInputProvider input)

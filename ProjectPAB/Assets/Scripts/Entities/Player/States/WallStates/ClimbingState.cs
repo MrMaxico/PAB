@@ -6,12 +6,10 @@ namespace Entities.Player.States
 {
     public class ClimbingState : MovementBaseState
     {
-        [Header("Ledge Detection Settings")]
         private const float LedgeCheckHeightOffset = 0.5f; // How far above the wall hit to look down
         private const float LedgeCheckForwardOffset = 0.2f; // How far forward into the wall to look down
         private const float LedgeCheckDistance = 0.7f;      // Length of the downward ray
 
-        private bool _hasLedge;
         private Vector3 _ledgePoint;
 
         private const string MoveCheck = "Move";
@@ -55,14 +53,18 @@ namespace Entities.Player.States
                 Ctx.Stamina -= Time.deltaTime * 10f;
             }
 
-            // ─── Inline Ledge Detection ───
-
         }
 
         public override void FixedUpdateState()
         {
             HandleClimbing();
         }
+
+
+
+        #endregion
+
+        #region State Logic
 
         private void HandleClimbing()
         {
@@ -89,13 +91,6 @@ namespace Entities.Player.States
             Ctx.SmoothModelRotation = Quaternion.Slerp(Ctx.SmoothModelRotation, faceWallRotation, Time.fixedDeltaTime * 15f);
         }
 
-        #endregion
-
-        #region Ledge Calculation
-
-        /// <summary>
-        /// Performs a localized downward trace relative to the current wall contact point.
-        /// </summary>
         private bool EvaluateLedgeDetection()
         {
             if (Ctx.WallDetector.Hit.Normal == Vector3.zero)
@@ -167,8 +162,6 @@ namespace Entities.Player.States
 
         #endregion
 
-        #region State Logic
-
         public override void CheckSwitchState()
         {
             if (Factory.HasState(PlayerStates.WallClinging))
@@ -189,7 +182,5 @@ namespace Entities.Player.States
                 }
             }
         }
-
-        #endregion
     }
 }

@@ -6,9 +6,6 @@ namespace Entities.Player.States
 {
     public class WallWalkingState : MovementBaseState
     {
-        private const string RightCheck = "Right";
-        private const string LeftCheck = "Left";
-
         public WallWalkingState(PlayerStateMachine currentContext, PlayerStateFactory charachterStateFactory) : base(currentContext, charachterStateFactory)
         {
             StateKey = PlayerStates.WallWalking;

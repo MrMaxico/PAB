@@ -70,6 +70,8 @@ namespace Entities.Player.States
 
         #endregion
 
+        #region State Logic
+
         private void HandleRailGrind()
         {
             float step = (Ctx.PlayerContext.GrindSpeed / _splineLength) * Time.fixedDeltaTime;
@@ -144,7 +146,9 @@ namespace Entities.Player.States
             Ctx.Rigidbody.linearVelocity = launchVelocity;
         }
 
-        #region InputHandling
+        #endregion
+
+        #region Inputs
 
         private Vector3 _moveDir;
 
@@ -186,8 +190,6 @@ namespace Entities.Player.States
 
         #endregion
 
-        #region StateLogic
-
         public override void CheckSwitchState()
         {
             if (Factory.HasState(PlayerStates.Grounded))
@@ -208,7 +210,5 @@ namespace Entities.Player.States
                 }
             }
         }
-
-        #endregion
     }
 }
