@@ -512,6 +512,11 @@ MonoBehaviour:
   _maxSlideSpeed: 25
   _slideAcceleration: 1.5
   _grindSpeed: 12
+  _maxStepHeight: 0.6
+  _stepCheckDistance: 0.5
+  _stepInset: 0.2
+  _treadProbeForward: 0.05
+  _playerRadius: 0.5
   _maxSkateboardSpeed: 12
   _brakeStrength: 10
   _pushForce: 5

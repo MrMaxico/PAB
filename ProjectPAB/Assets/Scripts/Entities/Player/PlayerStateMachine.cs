@@ -35,12 +35,12 @@ namespace Entities.Player
 
         public IInputProvider InputProvider => PlayerContext.InputProvider;
         public Transform PlayerModel => PlayerContext.PlayerModel;
+
         public Quaternion SmoothModelRotation
         {
             get => PlayerModel.rotation;
             set => PlayerModel.rotation = value;
         }
-
         public Quaternion SnapModelRotation
         {
             set
@@ -223,7 +223,6 @@ namespace Entities.Player
                     _staminaBar.value = Stamina;
             }
         }
-
 
         private void FixedUpdate()
         {
