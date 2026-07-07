@@ -90,6 +90,22 @@ namespace Entities.Player
         [SerializeField] private float _grindSpeed = 12f;
         public float GrindSpeed => _grindSpeed;
 
+        [Header("Step Settings")]
+        [SerializeField] private float _maxStepHeight = 0.3f;
+        public float MaxStepHeight => _maxStepHeight;
+
+        [SerializeField] private float _stepCheckDistance = 0.5f;
+        public float StepCheckDistance => _stepCheckDistance;
+
+        [SerializeField] private float _stepInset = 0.2f;
+        public float StepInset => _stepInset;
+
+        [SerializeField] private float _treadProbeForward = 0.05f;
+        public float TreadProbeForward => _treadProbeForward;
+
+        [SerializeField] private float _playerRadius = 0.5f;
+        public float PlayerRadius => _playerRadius;
+
         [Header("Skateboard Settings")]
         [SerializeField] private float _maxSkateboardSpeed = 12f;
         public float MaxSkateboardSpeed => _maxSkateboardSpeed;
