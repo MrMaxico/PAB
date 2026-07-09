@@ -11,7 +11,7 @@ namespace Entities.Player.Detection
             UseMovementDirection = useMovementDirection;
         }
 
-        // ─── Static factories ───
+        #region Static Factories
 
         public static new MovementCheck Ray(string id, Vector3 direction, float distance, int priority = 0)
         {
@@ -33,5 +33,7 @@ namespace Entities.Player.Detection
             check.WithDistance(distance).AtPriority(priority);
             return check;
         }
+
+        #endregion
     }
 }

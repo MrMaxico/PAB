@@ -65,6 +65,7 @@ namespace Entities.Player
         public WallDetector WallDetector => PlayerContext.WallDetector;
         public RailDetector RailDetector => PlayerContext.RailDetector;
         public WaterDetector WaterDetector => PlayerContext.WaterDetector;
+        public BarDetector BarDetector => PlayerContext.BarDetector;
 
         #region Jump
 
@@ -234,6 +235,7 @@ namespace Entities.Player
                 GroundDetector.Tick();
                 WallDetector.Tick(MoveDirection);
                 RailDetector.Tick();
+                BarDetector.Tick();
 
                 WaterMovementDirection = Rigidbody.linearVelocity;
                 WaterDetector.Tick(WaterMovementDirection);

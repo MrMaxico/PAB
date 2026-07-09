@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2191811067516586864}
   - component: {fileID: 7888743521886217730}
   - component: {fileID: 1951987464458436952}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Slider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -116,7 +116,7 @@ GameObject:
   - component: {fileID: 2104198787583067222}
   - component: {fileID: 7782124616199550551}
   - component: {fileID: 7186277229866688965}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -252,7 +252,7 @@ GameObject:
   - component: {fileID: 8092971586203689866}
   - component: {fileID: 4271662956881523311}
   - component: {fileID: 5271561983622655853}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -325,7 +325,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3410619285215491552}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Orientation
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -356,7 +356,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8274823544652791388}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Handle Slide Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -398,10 +398,11 @@ GameObject:
   - component: {fileID: 5593911470796212968}
   - component: {fileID: 6216411506497108235}
   - component: {fileID: 7911256477993348777}
+  - component: {fileID: 8001132178815496991}
   - component: {fileID: 474501095859533502}
   - component: {fileID: 1821497253750847027}
   - component: {fileID: 3006045210997315071}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -493,11 +494,12 @@ MonoBehaviour:
   _playerModel: {fileID: 4190587762309374539}
   _defaultLayer:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 8
   _groundDetector: {fileID: 3991497206129960342}
   _wallDetector: {fileID: 5593911470796212968}
   _railDetector: {fileID: 7911256477993348777}
   _waterDetector: {fileID: 6216411506497108235}
+  _barDetector: {fileID: 8001132178815496991}
   _cameraHolder: {fileID: 7043682445114242224}
   _firstPersonAnchor: {fileID: 437285140005243748}
   _cameraSensitivity: 5
@@ -517,6 +519,11 @@ MonoBehaviour:
   _stepInset: 0.2
   _treadProbeForward: 0.05
   _playerRadius: 0.5
+  _barArmLength: 1.5
+  _barPumpAcceleration: 4
+  _barSwingDamping: 0.3
+  _barMaxAngularSpeed: 6
+  _barLaunchBoost: 1.2
   _maxSkateboardSpeed: 12
   _brakeStrength: 10
   _pushForce: 5
@@ -535,13 +542,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a625421fbb70b649b5ed6d3072ba53d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Entities.Player.Detection.GroundDetector
+  _originOffset: 0.1
+  _jumpGracePeriod: 0.3
   DoDebug: 0
   _detectionLayer:
     serializedVersion: 2
     m_Bits: 1
   _maxSlopeAngle: 45
-  _originOffset: 0.1
-  _gracePeriod: 0.3
   _coyoteTime: 0.5
   _coyoteTimeCounter: 0
 --- !u!114 &5593911470796212968
@@ -556,13 +563,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 705ea58f50e05134482d954a42944818, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Entities.Player.Detection.WallDetector
+  _originOffset: 0.5
+  _jumpGracePeriod: 0.1
   DoDebug: 0
   _playerObject: {fileID: 4190587762309374539}
-  _wallLayer:
+  _detectionLayer:
     serializedVersion: 2
     m_Bits: 1
-  _wallJumpGracePeriod: 0.1
-  _originHeight: 0.5
 --- !u!114 &6216411506497108235
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -575,12 +582,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9877aab009498114fb4779b9c0bb31e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaterDetector
+  _originOffset: 0
+  _jumpGracePeriod: 0.1
   DoDebug: 0
   _playerObject: {fileID: 8504650305685435993}
   _detectionLayer:
     serializedVersion: 2
     m_Bits: 16
-  _originOffset: 0
+  _includeTriggers: 1
+  _surfaceProbeHeight: 10
 --- !u!114 &7911256477993348777
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -593,15 +603,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c73e5ec9566e3a54f91a0efc67d1eaf2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Entities.Player.Detection.RailDetector
+  _originOffset: 0.1
+  _jumpGracePeriod: 0.3
   DoDebug: 0
   _detectionLayer:
     serializedVersion: 2
     m_Bits: 64
   _maxSlopeAngle: 45
-  _originOffset: 0.1
-  _gracePeriod: 0.3
   _coyoteTime: 0.5
   _coyoteTimeCounter: 0
+--- !u!114 &8001132178815496991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5876471315240375162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18b9838547d0834f8fdd745d24b3f83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Entities.Player.Detection.BarDetector
+  _originOffset: 0
+  _jumpGracePeriod: 0.1
+  DoDebug: 0
+  _detectionLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  _includeTriggers: 1
+  _maxOverlaps: 8
+  _sameBarGracePeriod: 0.8
 --- !u!114 &474501095859533502
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -690,7 +721,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 437285140005243748}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: FirstPersonAnchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -723,7 +754,7 @@ GameObject:
   - component: {fileID: 2753821160574002300}
   - component: {fileID: 8827743272789612040}
   - component: {fileID: 3178389698403921196}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -814,7 +845,7 @@ GameObject:
   - component: {fileID: 1422386868276202923}
   - component: {fileID: 1951890713116964734}
   - component: {fileID: 7662496116262816426}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -913,7 +944,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6286323530380921509}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Fill Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -949,7 +980,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7043682445114242224}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: CameraHolder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -983,7 +1014,7 @@ GameObject:
   - component: {fileID: 4190587762309374539}
   - component: {fileID: 4588673548051302838}
   - component: {fileID: 3520916936871095782}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1074,7 +1105,7 @@ GameObject:
   - component: {fileID: 714753823177119220}
   - component: {fileID: 605472432798916205}
   - component: {fileID: 7889150570692059211}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}

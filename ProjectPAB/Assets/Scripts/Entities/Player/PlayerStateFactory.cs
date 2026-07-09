@@ -15,6 +15,7 @@ namespace Entities.Player
         Walled,
         Railed,
         Waterborne,
+        Barred,
 
         // Movement Sub-States
         Idling,
@@ -30,6 +31,7 @@ namespace Entities.Player
         WallClinging,
         WallLunging,
         LedgeHanging,
+        Swinging,
 
         // Combat/Action Keys (Generic slots for swapped weapons)
         PrimaryAction,
@@ -62,6 +64,7 @@ namespace Entities.Player
             RegisterState(PlayerStates.Walled, new WalledState(_context, this));
             RegisterState(PlayerStates.Railed, new RailedState(_context, this));
             RegisterState(PlayerStates.Waterborne, new WaterborneState(_context, this));
+            RegisterState(PlayerStates.Barred, new BarredState(_context, this));
 
             // --- Locomotion States ---
             RegisterState(PlayerStates.Idling, new IdlingState(_context, this));
@@ -70,6 +73,8 @@ namespace Entities.Player
             RegisterState(PlayerStates.Sliding, new SlidingState(_context, this));
 
             RegisterState(PlayerStates.Diving, new DivingState(_context, this));
+
+            RegisterState(PlayerStates.Swinging, new SwingingState(_context, this));
 
             // --- Climbing/Wall States ---
             RegisterState(PlayerStates.Climbing, new ClimbingState(_context, this));

@@ -46,6 +46,9 @@ namespace Entities.Player
         [SerializeField] private WaterDetector _waterDetector;
         public WaterDetector WaterDetector => _waterDetector;
 
+        [SerializeField] private BarDetector _barDetector;
+        public BarDetector BarDetector => _barDetector;
+
         [Header("Camera")]
         [SerializeField] private Transform _cameraHolder;
         public Transform CameraHolder => _cameraHolder;
@@ -105,6 +108,27 @@ namespace Entities.Player
 
         [SerializeField] private float _playerRadius = 0.5f;
         public float PlayerRadius => _playerRadius;
+
+        [Header("Bar Settings")]
+        [Tooltip("Pendulum length: how far below the bar the player hangs while swinging.")]
+        [SerializeField] private float _barArmLength = 1.5f;
+        public float BarArmLength => _barArmLength;
+
+        [Tooltip("Angular acceleration (rad/s^2) added by holding the pump input.")]
+        [SerializeField] private float _barPumpAcceleration = 4f;
+        public float BarPumpAcceleration => _barPumpAcceleration;
+
+        [Tooltip("How quickly an un-pumped swing settles. 0 = swings forever.")]
+        [SerializeField] private float _barSwingDamping = 0.3f;
+        public float BarSwingDamping => _barSwingDamping;
+
+        [Tooltip("Cap on swing speed (rad/s).")]
+        [SerializeField] private float _barMaxAngularSpeed = 6f;
+        public float BarMaxAngularSpeed => _barMaxAngularSpeed;
+
+        [Tooltip("Upward component of the launch direction when jumping off a bar.")]
+        [SerializeField] private float _barLaunchBoost = 1.2f;
+        public float BarLaunchBoost => _barLaunchBoost;
 
         [Header("Skateboard Settings")]
         [SerializeField] private float _maxSkateboardSpeed = 12f;

@@ -16,6 +16,8 @@ namespace Entities.Player.States
 
         private const string WaterCheck = "Water";
 
+        private const string BarCheck = "Bar";
+
         public JumpingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Jumping;
@@ -35,6 +37,8 @@ namespace Entities.Player.States
 
             Ctx.WaterDetector.AddMovementSphere(WaterCheck, 1f, 0.1f);
 
+            Ctx.BarDetector.AddSphere(BarCheck, 2f, 0.3f);
+
             if (Factory.HasState(PlayerStates.WallWalking))
             {
                 Ctx.WallDetector.AddRay(RightCheck, Vector3.right, 0.7f);
@@ -43,6 +47,7 @@ namespace Entities.Player.States
 
             Ctx.GroundDetector.Tick();
             Ctx.WallDetector.Tick();
+            Ctx.BarDetector.Tick();
 
             Ctx.JumpsUsed++;
 
@@ -82,6 +87,8 @@ namespace Entities.Player.States
             Ctx.WallDetector.RemoveCheck(FrontCheck);
             Ctx.WallDetector.RemoveCheck(RightCheck);
             Ctx.WallDetector.RemoveCheck(LeftCheck);
+
+            Ctx.BarDetector.RemoveCheck(BarCheck);
         }
 
         #region MonoBehaviours
@@ -155,6 +162,15 @@ namespace Entities.Player.States
                 {
                     TrySwitchState(PlayerStates.Railed);
                     return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Barred))
+            {
+                if (Ctx.BarDetector.HasAnyHit())
+                {
+                    if (TrySwitchState(PlayerStates.Barred))
+                        return;
                 }
             }
 

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Entities.Player.Detection
 {
@@ -7,29 +7,23 @@ namespace Entities.Player.Detection
         [SerializeField] private bool DoDebug;
 
         [Header("Settings")]
-        [SerializeField] public LayerMask _detectionLayer;
+        [SerializeField] private LayerMask _detectionLayer;
         public LayerMask DetectionLayer => _detectionLayer;
         protected override LayerMask DefaultLayerMask => _detectionLayer;
 
         [SerializeField] private float _maxSlopeAngle = 45f;
         public float MaxSlopeAngle => _maxSlopeAngle;
-        [SerializeField] private float _originOffset = 0.1f;
-
 
         [Header("Timing")]
-        [SerializeField] private float _gracePeriod = 0.3f;
         [SerializeField] private float _coyoteTime = 0.5f;
 
         // --- Results ---
         public DetectionHit Hit { get; private set; }
+        public bool HasHit => Hit.IsHit;
         [SerializeField] private float _coyoteTimeCounter;
         public float CoyoteTimeCounter => _coyoteTimeCounter;
 
-
-        private float _lastJumpTime;
-        private Vector3 RayOrigin => transform.position + Vector3.up * _originOffset;
-
-        // ─── Registration shorthands ───
+        #region Registration
 
         public void AddRay(string id, float distance, int priority = 0) =>
             AddCheck(DetectionCheck.Ray(id, Vector3.down, distance, priority));
@@ -37,40 +31,31 @@ namespace Entities.Player.Detection
         public void AddSphere(string id, float distance, float radius, int priority = 0) =>
             AddCheck(DetectionCheck.Sphere(id, Vector3.down, distance, radius, priority));
 
-        // ─── Tick ───
+        #endregion
 
-        public void Tick()
+        #region Tick Hooks
+
+        protected override void ClearHit() => Hit = DetectionHit.None;
+
+        protected override void OnHit(RaycastHit rawHit)
         {
-            if (Time.time - _lastJumpTime < _gracePeriod)
-            {
-                ResetHits();
-                Hit = DetectionHit.None;
-                _coyoteTimeCounter = 0f;
-                return;
-            }
-
-            CastChecks(RayOrigin, check => check.Direction);
-
-            if (TryGetBestHit(out RaycastHit rawHit))
-            {
-                float slopeAngle = Vector3.Angle(Vector3.up, rawHit.normal);
-                Hit = new DetectionHit(rawHit, slopeAngle);
-                _coyoteTimeCounter = _coyoteTime;
-            }
-            else
-            {
-                Hit = DetectionHit.None;
-                _coyoteTimeCounter -= Time.deltaTime;
-                ResetHits();
-            }
+            float slopeAngle = Vector3.Angle(Vector3.up, rawHit.normal);
+            Hit = new DetectionHit(rawHit, slopeAngle);
+            _coyoteTimeCounter = _coyoteTime;
         }
 
-        public void RegisterJumpTime() => _lastJumpTime = Time.time;
+        protected override void OnMiss() => _coyoteTimeCounter -= Time.deltaTime;
+
+        protected override void OnGraceTick() => _coyoteTimeCounter = 0f;
+
         public void ResetCoyoteTime() => _coyoteTimeCounter = 0f;
 
-        // ─── Private ───
+        #endregion
 
-        private bool TryGetBestHit(out RaycastHit bestHit)
+        #region Helpers
+
+        // Prefers hits within the slope limit, falls back to any hit.
+        protected override bool TryGetBestHit(out RaycastHit bestHit)
         {
             foreach (var check in Checks)
             {
@@ -81,20 +66,14 @@ namespace Entities.Player.Detection
                 }
             }
 
-            foreach (var check in Checks)
-            {
-                if (check.IsHit)
-                {
-                    bestHit = check.Hit;
-                    return true;
-                }
-            }
-
-            bestHit = default;
-            return false;
+            return base.TryGetBestHit(out bestHit);
         }
 
+        #endregion
+
+        #region Gizmos
 #if UNITY_EDITOR
+
         protected virtual void OnDrawGizmosSelected()
         {
             if (!DoDebug) return;
@@ -117,6 +96,8 @@ namespace Entities.Player.Detection
                 Gizmos.DrawRay(transform.position, Hit.Normal * 1.5f);
             }
         }
+
 #endif
+        #endregion
     }
 }

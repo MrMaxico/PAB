@@ -4,6 +4,6 @@ namespace Entities.Player.Detection
 {
     public class GroundDetector : DownwardDetector
     {
-        public LayerMask GroundLayer => _detectionLayer;
+        public LayerMask GroundLayer => DetectionLayer;
     }
 }

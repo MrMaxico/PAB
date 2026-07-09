@@ -14,10 +14,15 @@ namespace Entities.Player.Detection
         public LayerMask DetectionLayer => _detectionLayer;
         protected override LayerMask DefaultLayerMask => _detectionLayer;
 
-        [SerializeField] private float _originOffset = 0.1f;
+        [SerializeField] private bool _includeTriggers = true;
 
-        // ─── Results ───
+        [Header("Submersion")]
+        [Tooltip("How far above the head to search for the water surface when fully submerged.")]
+        [SerializeField] private float _surfaceProbeHeight = 10f;
+
+        // --- Results ---
         public DetectionHit Hit { get; private set; }
+        public bool HasHit => Hit.IsHit;
 
         // How much of the body's vertical extent is below the water surface, 0-1.
         // 0 = not touching water, 1 = fully submerged. NaN-safe: stays 0 if no surface is found.
@@ -26,28 +31,29 @@ namespace Entities.Player.Detection
         public float WaterSurfaceHeight { get; private set; }
 
         private Vector3 _lastMovementDirection;
-        private Vector3 RayOrigin => transform.position + Vector3.up * _originOffset;
 
-        // ─── Registration shorthands ───
+        private Transform DirSource => _playerObject != null ? _playerObject : transform;
+
+        #region Registration
 
         public void AddRay(string id, Vector3 direction, float distance, int priority = 0)
         {
             var check = MovementCheck.Ray(id, direction, distance, priority);
-            check.IncludeTriggers();
+            if (_includeTriggers) check.IncludeTriggers();
             AddCheck(check);
         }
 
         public void AddSphere(string id, Vector3 direction, float distance, float radius, int priority = 0)
         {
             var check = MovementCheck.Sphere(id, direction, distance, radius, priority);
-            check.IncludeTriggers();
+            if (_includeTriggers) check.IncludeTriggers();
             AddCheck(check);
         }
 
         public void AddMovementRay(string id, float distance, int priority = 0)
         {
             var check = MovementCheck.Movement(id, distance, priority);
-            check.IncludeTriggers();
+            if (_includeTriggers) check.IncludeTriggers();
             AddCheck(check);
         }
 
@@ -55,34 +61,37 @@ namespace Entities.Player.Detection
         {
             var check = MovementCheck.Movement(id, distance, priority);
             check.AsSphere(radius);
-            check.IncludeTriggers();
+            if (_includeTriggers) check.IncludeTriggers();
             AddCheck(check);
         }
 
-        // ─── Tick ───
+        #endregion
 
-        public void Tick(Vector3 movementDirection = new())
+        #region Tick Hooks
+
+        public override void Tick(Vector3 movementDirection = default)
         {
             _lastMovementDirection = movementDirection.normalized;
-
-            CastChecks(RayOrigin, check =>
-                check.UseMovementDirection
-                    ? _lastMovementDirection
-                    : _playerObject.TransformDirection(check.Direction));
-
-            if (TryGetBestHit(out RaycastHit rawHit))
-            {
-                Hit = new DetectionHit(rawHit);
-            }
-            else
-            {
-                Hit = DetectionHit.None;
-                ResetHits();
-            }
+            base.Tick(movementDirection);
         }
 
-        // ─── Submersion ───
-        // only works when entering water from above
+        protected override void ClearHit() => Hit = DetectionHit.None;
+
+        protected override void OnHit(RaycastHit rawHit) => Hit = new DetectionHit(rawHit);
+
+        protected override Vector3 ResolveCastDirection(MovementCheck check, Vector3 movementDirection) =>
+            check.UseMovementDirection
+                ? movementDirection
+                : DirSource.TransformDirection(check.Direction);
+
+        #endregion
+
+        #region Submersion
+
+        // Entry-direction independent: point-in-water checks tell us WHERE the body is relative
+        // to the water, then a directional probe finds the surface. Works when entering from the
+        // top, wading in from the side, being fully underwater, or rising into a volume from below.
+        // (A plain downward ray fails underwater because raycasts never hit a collider from inside.)
         public void TickSubmersion(Collider bodyCollider)
         {
             Bounds bounds = bodyCollider.bounds;
@@ -97,47 +106,83 @@ namespace Entities.Player.Detection
                 return;
             }
 
-            Vector3 castOrigin = new(transform.position.x, bodyTopY + 0.25f, transform.position.z);
-            float castDistance = bodyHeight + 0.5f;
+            QueryTriggerInteraction triggers = _includeTriggers
+                ? QueryTriggerInteraction.Collide
+                : QueryTriggerInteraction.Ignore;
 
-            if (Physics.Raycast(castOrigin, Vector3.down, out RaycastHit hit, castDistance, _detectionLayer, QueryTriggerInteraction.Collide))
-            {
-                HasWaterSurface = true;
-                WaterSurfaceHeight = hit.point.y;
+            float x = transform.position.x;
+            float z = transform.position.z;
 
-                float submergedHeight = Mathf.Clamp(hit.point.y - bodyBottomY, 0f, bodyHeight);
-                SubmersionFraction = submergedHeight / bodyHeight;
-            }
-            else
+            bool bottomInWater = Physics.CheckSphere(new Vector3(x, bodyBottomY + 0.05f, z), 0.02f, _detectionLayer, triggers);
+            bool topInWater = Physics.CheckSphere(new Vector3(x, bodyTopY - 0.05f, z), 0.02f, _detectionLayer, triggers);
+
+            if (!bottomInWater && !topInWater)
             {
                 HasWaterSurface = false;
                 SubmersionFraction = 0f;
+                return;
             }
-        }
 
-        // ─── Private ───
-
-        private bool TryGetBestHit(out RaycastHit bestHit)
-        {
-            for (int i = 0; i < Checks.Count; i++)
+            if (topInWater && !bottomInWater)
             {
-                if (Checks[i].IsHit)
+                // Rising into a floating volume from below: find its underside with an up-cast
+                // (starts below the volume, so it hits the bottom face).
+                Vector3 underOrigin = new(x, bodyBottomY - 0.25f, z);
+                if (Physics.Raycast(underOrigin, Vector3.up, out RaycastHit underHit, bodyHeight + 0.5f, _detectionLayer, triggers))
                 {
-                    bestHit = Checks[i].Hit;
-                    return true;
+                    HasWaterSurface = false; // no surface *below* the head to float on
+                    SubmersionFraction = Mathf.Clamp01((bodyTopY - underHit.point.y) / bodyHeight);
+                    return;
                 }
             }
 
-            bestHit = default;
-            return false;
+            if (topInWater)
+            {
+                // Head under water. Probe down from high above — the probe starts outside the
+                // volume, so the first hit is the real surface.
+                Vector3 probeOrigin = new(x, bodyTopY + _surfaceProbeHeight, z);
+                if (Physics.Raycast(probeOrigin, Vector3.down, out RaycastHit surfaceHit, _surfaceProbeHeight + bodyHeight, _detectionLayer, triggers))
+                {
+                    HasWaterSurface = true;
+                    WaterSurfaceHeight = surfaceHit.point.y;
+                }
+                else
+                {
+                    // Even the probe start is under water (very deep); surface height unknown.
+                    HasWaterSurface = false;
+                    WaterSurfaceHeight = bodyTopY;
+                }
+
+                SubmersionFraction = 1f;
+                return;
+            }
+
+            // Bottom in water, head above it: the surface sits between them, so a short ray from
+            // just above the head starts outside the volume and finds it — regardless of whether
+            // the water was entered from the top or waded into from the side.
+            Vector3 castOrigin = new(x, bodyTopY + 0.25f, z);
+            if (Physics.Raycast(castOrigin, Vector3.down, out RaycastHit hit, bodyHeight + 0.5f, _detectionLayer, triggers))
+            {
+                HasWaterSurface = true;
+                WaterSurfaceHeight = hit.point.y;
+                SubmersionFraction = Mathf.Clamp01((hit.point.y - bodyBottomY) / bodyHeight);
+            }
+            else
+            {
+                // Feet are wet but no top face above us (unusual volume shape); best guess.
+                HasWaterSurface = false;
+                SubmersionFraction = 0.5f;
+            }
         }
 
+        #endregion
+
+        #region Gizmos
 #if UNITY_EDITOR
+
         private void OnDrawGizmosSelected()
         {
             if (!DoDebug) return;
-
-            if (_playerObject == null) return;
 
             Vector3 origin = RayOrigin;
 
@@ -145,8 +190,8 @@ namespace Entities.Player.Detection
             {
                 MovementCheck check = Checks[i];
                 Vector3 worldDir = check.UseMovementDirection
-                    ? (_lastMovementDirection != Vector3.zero ? _lastMovementDirection : _playerObject.forward)
-                    : _playerObject.TransformDirection(check.Direction);
+                    ? (_lastMovementDirection != Vector3.zero ? _lastMovementDirection : DirSource.forward)
+                    : DirSource.TransformDirection(check.Direction);
 
                 Gizmos.color = check.IsHit ? Color.cyan : Color.blue;
                 Gizmos.DrawRay(origin, worldDir * check.Distance);
@@ -160,6 +205,8 @@ namespace Entities.Player.Detection
             Gizmos.color = Color.magenta;
             Gizmos.DrawSphere(Hit.Point, 0.05f);
         }
+
 #endif
+        #endregion
     }
 }

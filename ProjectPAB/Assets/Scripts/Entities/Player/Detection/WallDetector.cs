@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Entities.Player.Detection
 {
@@ -10,19 +11,20 @@ namespace Entities.Player.Detection
         [SerializeField] private Transform _playerObject;
 
         [Header("Settings")]
-        [SerializeField] private LayerMask _wallLayer;
-        [SerializeField] private float _wallJumpGracePeriod = 0.1f;
-        [SerializeField] private float _originHeight = 0.5f;
+        [FormerlySerializedAs("_wallLayer")]
+        [SerializeField] private LayerMask _detectionLayer;
+        public LayerMask DetectionLayer => _detectionLayer;
+        protected override LayerMask DefaultLayerMask => _detectionLayer;
 
         // --- Results ---
         public DetectionHit Hit { get; private set; }
+        public bool HasHit => Hit.IsHit;
 
-        protected override LayerMask DefaultLayerMask => _wallLayer;
+        private Rigidbody _rigidbody;
 
-        private float _lastWallJumpTime;
-        private Vector3 RayOrigin => transform.position + Vector3.up * _originHeight;
+        private Transform DirSource => _playerObject != null ? _playerObject : transform;
 
-        // ─── Registration shorthands ───
+        #region Registration
 
         public void AddRay(string id, Vector3 direction, float distance, int priority = 0) =>
             AddCheck(MovementCheck.Ray(id, direction, distance, priority));
@@ -40,64 +42,38 @@ namespace Entities.Player.Detection
             AddCheck(check);
         }
 
-        // ─── Tick ───
+        #endregion
 
-        public void Tick(Vector3 movementDirection = new())
+        #region Tick Hooks
+
+        protected override void ClearHit() => Hit = DetectionHit.None;
+
+        protected override void OnHit(RaycastHit rawHit)
         {
-            if (Time.time - _lastWallJumpTime < _wallJumpGracePeriod)
-            {
-                ResetHits();
-                Hit = DetectionHit.None;
-                return;
-            }
+            _rigidbody ??= GetComponent<Rigidbody>();
 
-            Vector3 normalizedMovement = movementDirection.normalized;
-            CastChecks(RayOrigin, check =>
-                check.UseMovementDirection
-                    ? normalizedMovement
-                    : _playerObject.TransformDirection(check.Direction));
+            Vector3 wallNormal = rawHit.normal;
+            Vector3 velocityOnWall = Vector3.ProjectOnPlane(_rigidbody.linearVelocity, wallNormal);
+            Vector3 wallForward = velocityOnWall.sqrMagnitude > 0.01f
+                ? velocityOnWall.normalized
+                : Vector3.ProjectOnPlane(DirSource.forward, wallNormal).normalized;
 
-            if (TryGetBestHit(out RaycastHit rawHit))
-            {
-                Vector3 wallNormal = rawHit.normal;
-                Vector3 velocityOnWall = Vector3.ProjectOnPlane(GetComponent<Rigidbody>().linearVelocity, wallNormal);
-                Vector3 wallForward = velocityOnWall.sqrMagnitude > 0.01f
-                    ? velocityOnWall.normalized
-                    : Vector3.ProjectOnPlane(_playerObject.forward, wallNormal).normalized;
-
-                Hit = new DetectionHit(rawHit, forward: wallForward);
-            }
-            else
-            {
-                Hit = DetectionHit.None;
-                ResetHits();
-            }
+            Hit = new DetectionHit(rawHit, forward: wallForward);
         }
 
-        public void RegisterJumpTime() => _lastWallJumpTime = Time.time;
+        protected override Vector3 ResolveCastDirection(MovementCheck check, Vector3 movementDirection) =>
+            check.UseMovementDirection
+                ? movementDirection
+                : DirSource.TransformDirection(check.Direction);
 
-        // ─── Private ───
+        #endregion
 
-        private bool TryGetBestHit(out RaycastHit bestHit)
-        {
-            for (int i = 0; i < Checks.Count; i++)
-            {
-                if (Checks[i].IsHit)
-                {
-                    bestHit = Checks[i].Hit;
-                    return true;
-                }
-            }
-            bestHit = default;
-            return false;
-        }
-
+        #region Gizmos
 #if UNITY_EDITOR
+
         private void OnDrawGizmosSelected()
         {
             if (!DoDebug) return;
-
-            if (_playerObject == null) return;
 
             Vector3 origin = RayOrigin;
             Vector3 stateMachineMoveDir = Vector3.zero;
@@ -112,12 +88,12 @@ namespace Entities.Player.Detection
 
                 if (check.UseMovementDirection)
                 {
-                    worldDir = stateMachineMoveDir != Vector3.zero ? stateMachineMoveDir : _playerObject.forward;
+                    worldDir = stateMachineMoveDir != Vector3.zero ? stateMachineMoveDir : DirSource.forward;
                     Gizmos.color = Color.pink;
                 }
                 else
                 {
-                    worldDir = _playerObject.TransformDirection(check.Direction);
+                    worldDir = DirSource.TransformDirection(check.Direction);
                     Gizmos.color = check.IsHit ? Color.green : Color.red;
                 }
 
@@ -136,6 +112,8 @@ namespace Entities.Player.Detection
             Gizmos.color = Color.blue;
             Gizmos.DrawRay(origin, Hit.Forward * 1.0f);
         }
+
 #endif
+        #endregion
     }
 }
