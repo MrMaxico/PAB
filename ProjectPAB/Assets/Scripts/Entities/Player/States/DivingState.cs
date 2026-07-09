@@ -17,9 +17,8 @@ namespace Entities.Player.States
 
         public override void EnterState(PlayerBaseState previousState)
         {
-#if UNITY_EDITOR
-            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
-#endif
+            Debug.LogWarning($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+
             _diveDuration = _maxDiveDuration;
 
             SetLock(true);
@@ -27,9 +26,7 @@ namespace Entities.Player.States
 
         public override void ExitState(PlayerBaseState nextState)
         {
-#if UNITY_EDITOR
-            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
-#endif       
+            Debug.LogError($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
         }
 
         #region MonoBehaveiours

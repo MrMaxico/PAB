@@ -46,9 +46,6 @@ namespace Entities.Player
         [SerializeField] private WaterDetector _waterDetector;
         public WaterDetector WaterDetector => _waterDetector;
 
-        [SerializeField] private BarDetector _barDetector;
-        public BarDetector BarDetector => _barDetector;
-
         [Header("Camera")]
         [SerializeField] private Transform _cameraHolder;
         public Transform CameraHolder => _cameraHolder;
@@ -92,27 +89,6 @@ namespace Entities.Player
 
         [SerializeField] private float _grindSpeed = 12f;
         public float GrindSpeed => _grindSpeed;
-
-        [Header("Bar Swing Settings")]
-        [Tooltip("Distance the player hangs below the bar (pendulum arm length).")]
-        [SerializeField] private float _barArmLength = 1.6f;
-        public float BarArmLength => _barArmLength;
-
-        [Tooltip("How strongly movement input pumps the swing.")]
-        [SerializeField] private float _barPumpAcceleration = 8f;
-        public float BarPumpAcceleration => _barPumpAcceleration;
-
-        [Tooltip("Energy bleed per second so an un-pumped swing settles.")]
-        [SerializeField] private float _barSwingDamping = 0.4f;
-        public float BarSwingDamping => _barSwingDamping;
-
-        [Tooltip("Clamps how fast the pendulum can rotate (rad/s).")]
-        [SerializeField] private float _barMaxAngularSpeed = 6f;
-        public float BarMaxAngularSpeed => _barMaxAngularSpeed;
-
-        [Tooltip("Upward component of the launch DIRECTION when leaving the bar (JumpingState scales it into an impulse ~x7). ~1 feels natural.")]
-        [SerializeField] private float _barLaunchBoost = 1f;
-        public float BarLaunchBoost => _barLaunchBoost;
 
         [Header("Step Settings")]
         [SerializeField] private float _maxStepHeight = 0.3f;
