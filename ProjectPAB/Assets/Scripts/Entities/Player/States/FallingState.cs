@@ -44,6 +44,8 @@ namespace Entities.Player.States
             Ctx.GroundDetector.Tick();
             Ctx.RailDetector.Tick();
             Ctx.WallDetector.Tick();
+            Ctx.WaterDetector.Tick();
+            Ctx.BarDetector.Tick(); // proximity-based: no check registration needed
         }
 
         public override void ExitState(PlayerBaseState nextState)
@@ -59,6 +61,8 @@ namespace Entities.Player.States
             Ctx.WallDetector.RemoveCheck(FrontCheck);
             Ctx.WallDetector.RemoveCheck(RightCheck);
             Ctx.WallDetector.RemoveCheck(LeftCheck);
+
+            Ctx.WaterDetector.RemoveCheck(WaterCheck);
         }
 
         #region Inputs
@@ -132,6 +136,15 @@ namespace Entities.Player.States
                 if (Ctx.WallDetector.HasAnyHit())
                 {
                     if (TrySwitchState(PlayerStates.Walled))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Barred))
+            {
+                if (Ctx.BarDetector.HasHit)
+                {
+                    if (TrySwitchState(PlayerStates.Barred))
                         return;
                 }
             }

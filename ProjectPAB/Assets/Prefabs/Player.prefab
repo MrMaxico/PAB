@@ -397,6 +397,7 @@ GameObject:
   - component: {fileID: 3991497206129960342}
   - component: {fileID: 5593911470796212968}
   - component: {fileID: 6216411506497108235}
+  - component: {fileID: 4891440435262051752}
   - component: {fileID: 7911256477993348777}
   - component: {fileID: 474501095859533502}
   - component: {fileID: 1821497253750847027}
@@ -498,6 +499,7 @@ MonoBehaviour:
   _wallDetector: {fileID: 5593911470796212968}
   _railDetector: {fileID: 7911256477993348777}
   _waterDetector: {fileID: 6216411506497108235}
+  _barDetector: {fileID: 4891440435262051752}
   _cameraHolder: {fileID: 7043682445114242224}
   _firstPersonAnchor: {fileID: 437285140005243748}
   _cameraSensitivity: 5
@@ -512,6 +514,11 @@ MonoBehaviour:
   _maxSlideSpeed: 25
   _slideAcceleration: 1.5
   _grindSpeed: 12
+  _barArmLength: 1.4
+  _barPumpAcceleration: 8
+  _barSwingDamping: 0.4
+  _barMaxAngularSpeed: 6
+  _barLaunchBoost: 0.8
   _maxStepHeight: 0.6
   _stepCheckDistance: 0.5
   _stepInset: 0.2
@@ -581,6 +588,27 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 16
   _originOffset: 0
+--- !u!114 &4891440435262051752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5876471315240375162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ce9522a2af3beb40ae69fb8ad2ff875, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Entities.Player.Detection.BarDetector
+  DoDebug: 0
+  _barLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  _includeTriggers: 1
+  _originHeight: 0
+  _detectionRadius: 2.25
+  _maxOverlaps: 8
+  _regrabGracePeriod: 0.25
 --- !u!114 &7911256477993348777
 MonoBehaviour:
   m_ObjectHideFlags: 0

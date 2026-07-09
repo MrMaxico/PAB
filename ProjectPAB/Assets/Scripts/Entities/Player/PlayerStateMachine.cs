@@ -65,6 +65,7 @@ namespace Entities.Player
         public WallDetector WallDetector => PlayerContext.WallDetector;
         public RailDetector RailDetector => PlayerContext.RailDetector;
         public WaterDetector WaterDetector => PlayerContext.WaterDetector;
+        public BarDetector BarDetector => PlayerContext.BarDetector;
 
         #region Jump
 
@@ -142,7 +143,7 @@ namespace Entities.Player
 
         public Vector3 PlatformVelocity { get; set; }
 
-        public Vector3 WaterMovementDirection { get; set; }
+        public Vector3 MovementDirection { get; set; }
 
         #endregion
 
@@ -234,9 +235,10 @@ namespace Entities.Player
                 GroundDetector.Tick();
                 WallDetector.Tick(MoveDirection);
                 RailDetector.Tick();
+                BarDetector.Tick(); // proximity-based, direction-independent
 
-                WaterMovementDirection = Rigidbody.linearVelocity;
-                WaterDetector.Tick(WaterMovementDirection);
+                MovementDirection = Rigidbody.linearVelocity;
+                WaterDetector.Tick(MovementDirection);
                 WaterDetector.TickSubmersion(Collider);
 
                 _currentRootState?.FixedUpdateStates();

@@ -43,6 +43,8 @@ namespace Entities.Player.States
 
             Ctx.GroundDetector.Tick();
             Ctx.WallDetector.Tick();
+            Ctx.WaterDetector.Tick();
+            Ctx.BarDetector.Tick(); // proximity-based: no check registration needed
 
             Ctx.JumpsUsed++;
 
@@ -82,6 +84,8 @@ namespace Entities.Player.States
             Ctx.WallDetector.RemoveCheck(FrontCheck);
             Ctx.WallDetector.RemoveCheck(RightCheck);
             Ctx.WallDetector.RemoveCheck(LeftCheck);
+
+            Ctx.WaterDetector.RemoveCheck(WaterCheck);
         }
 
         #region MonoBehaviours
@@ -126,8 +130,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.WaterDetector.HasAnyHit())
                 {
-                    TrySwitchState(PlayerStates.Waterborne);
-                    return;
+                    if (TrySwitchState(PlayerStates.Waterborne))
+                        return;
                 }
             }
 
@@ -135,8 +139,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.JumpToFallingTime <= 0)
                 {
-                    TrySwitchState(PlayerStates.Falling);
-                    return;
+                    if (TrySwitchState(PlayerStates.Falling))
+                        return;
                 }
             }
 
@@ -144,8 +148,17 @@ namespace Entities.Player.States
             {
                 if (Ctx.WallDetector.HasAnyHit() && Ctx.JumpToWalledTime <= 0)
                 {
-                    TrySwitchState(PlayerStates.Walled);
-                    return;
+                    if (TrySwitchState(PlayerStates.Walled))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Barred))
+            {
+                if (Ctx.BarDetector.HasHit)
+                {
+                    if (TrySwitchState(PlayerStates.Barred))
+                        return;
                 }
             }
 
@@ -153,8 +166,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.RailDetector.HasAnyHit())
                 {
-                    TrySwitchState(PlayerStates.Railed);
-                    return;
+                    if (TrySwitchState(PlayerStates.Railed))
+                        return;
                 }
             }
 
@@ -162,8 +175,8 @@ namespace Entities.Player.States
             {
                 if (Ctx.GroundDetector.HasAnyHit())
                 {
-                    TrySwitchState(PlayerStates.Grounded);
-                    return;
+                    if (TrySwitchState(PlayerStates.Grounded))
+                        return;
                 }
             }
         }
