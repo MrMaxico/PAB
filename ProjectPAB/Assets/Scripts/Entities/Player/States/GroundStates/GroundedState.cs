@@ -311,7 +311,7 @@ namespace Entities.Player.States
                 }
             }
 
-            if (Factory.HasState(PlayerStates.Falling))
+            if (Factory.HasState(PlayerStates.Airborne))
             {
                 if (!Ctx.GroundDetector.HasAnyHit())
                 {
@@ -324,7 +324,7 @@ namespace Entities.Player.States
                     _ungroundedTimer += Time.fixedDeltaTime;
                     if (_ungroundedTimer >= UngroundedTolerance)
                     {
-                        if (TrySwitchState(PlayerStates.Falling))
+                        if (TrySwitchState(PlayerStates.Airborne))
                             return;
                     }
                 }

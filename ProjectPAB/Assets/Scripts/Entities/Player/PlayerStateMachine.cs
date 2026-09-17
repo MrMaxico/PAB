@@ -121,10 +121,12 @@ namespace Entities.Player
         [SerializeField] private float _jumpBufferTime = 0.15f;
         [SerializeField] private float _jumpReleaseTime = 0.1f;
 
-        private bool _jumpBuffered;
-        private float _lastJumpPressedTime;
-        private bool _jumpHeld;
-        private bool _jumpLock;
+        [SerializeField] private bool _airStrafeSpeedBoost;
+        public bool AirStrafeSpeedBoost
+        {
+            get => _airStrafeSpeedBoost;
+            set => _airStrafeSpeedBoost = value;
+        }
 
         #endregion
 
@@ -199,7 +201,7 @@ namespace Entities.Player
 
             if (IsLocalPlayer)
             {
-                _currentRootState = _stateFactory.GetState(PlayerStates.Falling);
+                _currentRootState = _stateFactory.GetState(PlayerStates.Airborne);
                 _currentRootState.EnterState();
 
                 SwitchContextState(PlayerStates.ThirdPersonCamera);

@@ -4,19 +4,13 @@ using UnityEngine;
 
 namespace Entities.Player.States
 {
-    public class FallingState : PlayerBaseState
+    public class FallingState : MovementBaseState
     {
-        private const string GroundCheck = "Ground";
+        private float _timeSinceLastFalling = -999f;
 
-        private const string RailCheck = "Rail";
+        private float _entryHorizontalSpeed;
 
-        private const string FrontCheck = "Front";
-        private const string RightCheck = "Right";
-        private const string LeftCheck = "Left";
-
-        private const string WaterCheck = "Water";
-
-        private const string BarCheck = "Bar";
+        private float _currentMaxStrafeSpeed;
 
         public FallingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
@@ -28,27 +22,25 @@ namespace Entities.Player.States
 #if UNITY_EDITOR
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 #endif
+            Vector3 vel = Ctx.Rigidbody.linearVelocity;
+            _entryHorizontalSpeed = new Vector3(vel.x, 0, vel.z).magnitude;
 
-            Ctx.GroundDetector.AddSphere(GroundCheck, 0.8f, 0.5f);
-
-            Ctx.RailDetector.AddSphere(RailCheck, 0.8f, 0.35f);
-
-            Ctx.WallDetector.AddSphere(FrontCheck, Vector3.forward, 0.7f, 0.3f);
-
-            Ctx.WaterDetector.AddMovementSphere(WaterCheck, 1f, 0.1f);
-
-            Ctx.BarDetector.AddSphere(BarCheck, 2f, 0.3f);
-
-            if (Factory.HasState(PlayerStates.WallWalking))
+            if (Time.time - _timeSinceLastFalling < Ctx.PlayerContext.StrafeHopWindow)
             {
-                Ctx.WallDetector.AddRay(RightCheck, Vector3.right, 0.7f);
-                Ctx.WallDetector.AddRay(LeftCheck, Vector3.left, 0.7f);
+                // A fresh ground jump grows the cap; a mid-air re-entry (Jumping -> Airborne
+                // handoff, Idling -> Falling) keeps it untouched.
+                if (Ctx.AirStrafeSpeedBoost)
+                {
+                    _currentMaxStrafeSpeed = Mathf.Min(
+                        _currentMaxStrafeSpeed + Ctx.PlayerContext.AirStrafeGain,
+                        Ctx.PlayerContext.MaxAirStrafeSpeed);
+                }
             }
-
-            Ctx.GroundDetector.Tick();
-            Ctx.RailDetector.Tick();
-            Ctx.WallDetector.Tick();
-            Ctx.BarDetector.Tick();
+            else
+            {
+                // Chain broken: too long since we were last airborne.
+                _currentMaxStrafeSpeed = Ctx.PlayerContext.BaseAirStrafeSpeed;
+            }
         }
 
         public override void ExitState(PlayerBaseState nextState)
@@ -57,100 +49,50 @@ namespace Entities.Player.States
             if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
 #endif
 
-            Ctx.GroundDetector.RemoveCheck(GroundCheck);
+            Ctx.AirStrafeSpeedBoost = false;
 
-            Ctx.RailDetector.RemoveCheck(RailCheck);
-
-            Ctx.WallDetector.RemoveCheck(FrontCheck);
-            Ctx.WallDetector.RemoveCheck(RightCheck);
-            Ctx.WallDetector.RemoveCheck(LeftCheck);
-
-            Ctx.BarDetector.RemoveCheck(BarCheck);
+            _timeSinceLastFalling = Time.time;
         }
 
-        #region Inputs
+        #region Monobehaviours
 
-        protected override void HandleInputAction(IInputProvider input)
+        public override void FixedUpdateState()
         {
-            if (Factory.HasState(PlayerStates.Jumping))
-            {
-                if (Ctx.JumpsLeft > 0 && Ctx.GroundDetector.CoyoteTimeCounter > 0)
-                {
-                    if (input.JumpState.UseBufferedPress())
-                    {
-                        if (TrySwitchState(PlayerStates.Jumping))
-                            return;
-                    }
-                }
-            }
-
-            if (Factory.HasState(PlayerStates.Diving))
-            {
-                if (input.DiveState.IsPressed)
-                {
-                    if (TrySwitchState(PlayerStates.Diving))
-                        return;
-                }
-            }
+            HandleStrafing();
         }
 
         #endregion
 
-        public override void InitializeSubState()
+        #region State Logic
+
+        private void HandleStrafing()
         {
-            if (Factory.HasState(PlayerStates.Idling))
-            {
-                if (TrySwitchSubState(PlayerStates.Idling))
-                    return;
-            }
+            Vector3 strafeDir = (Ctx.Orientation.forward * _moveInput.y) + (Ctx.Orientation.right * _moveInput.x);
+            strafeDir.y = 0f;
+            if (strafeDir.sqrMagnitude > 1f) strafeDir.Normalize();
+
+            Vector3 velocity = Ctx.Rigidbody.linearVelocity;
+            Vector3 horizontalVelocity = new(velocity.x, 0f, velocity.z);
+
+            horizontalVelocity += strafeDir * (Ctx.PlayerContext.AirStrafeForce * Time.fixedDeltaTime * 10f);
+
+            float maxSpeed = Mathf.Max(_entryHorizontalSpeed, _currentMaxStrafeSpeed);
+            if (horizontalVelocity.magnitude > maxSpeed) horizontalVelocity = horizontalVelocity.normalized * maxSpeed;
+
+            Ctx.Rigidbody.linearVelocity = new Vector3(horizontalVelocity.x, velocity.y, horizontalVelocity.z);
         }
 
-        public override void CheckSwitchState()
+        #endregion
+
+        #region Inputs
+
+        private Vector3 _moveInput;
+
+        protected override void HandleInputAction(IInputProvider input)
         {
-            if (Factory.HasState(PlayerStates.Waterborne))
-            {
-                if (Ctx.WaterDetector.HasAnyHit())
-                {
-                    if (TrySwitchState(PlayerStates.Waterborne))
-                        return;
-                }
-            }
-
-            if (Factory.HasState(PlayerStates.Railed))
-            {
-                if (Ctx.RailDetector.HasAnyHit())
-                {
-                    if (TrySwitchState(PlayerStates.Railed))
-                        return;
-                }
-            }
-
-            if (Factory.HasState(PlayerStates.Barred))
-            {
-                if (Ctx.BarDetector.HasAnyHit())
-                {
-                    if (TrySwitchState(PlayerStates.Barred))
-                        return;
-                }
-            }
-
-            if (Factory.HasState(PlayerStates.Grounded))
-            {
-                if (Ctx.GroundDetector.HasAnyHit())
-                {
-                    if (TrySwitchState(PlayerStates.Grounded))
-                        return;
-                }
-            }
-
-            if (Factory.HasState(PlayerStates.Walled))
-            {
-                if (Ctx.WallDetector.HasAnyHit())
-                {
-                    if (TrySwitchState(PlayerStates.Walled))
-                        return;
-                }
-            }
+            _moveInput = input.MovementState.RawInputValue;
         }
+
+        #endregion
     }
 }

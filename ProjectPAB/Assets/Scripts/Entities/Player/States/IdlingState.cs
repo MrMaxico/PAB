@@ -69,6 +69,18 @@ namespace Entities.Player.States
                         return;
                 }
             }
+
+            //if (_currentSuperState.StateKey == PlayerStates.Airborne)
+            //{
+            if (Factory.HasState(PlayerStates.Falling))
+            {
+                if (!Ctx.GroundDetector.HasAnyHit())
+                {
+                    if (TrySwitchState(PlayerStates.Falling))
+                        return;
+                }
+            }
+            //}
         }
     }
 }

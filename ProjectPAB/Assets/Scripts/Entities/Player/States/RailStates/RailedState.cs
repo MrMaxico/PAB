@@ -201,11 +201,11 @@ namespace Entities.Player.States
                 }
             }
 
-            if (Factory.HasState(PlayerStates.Falling))
+            if (Factory.HasState(PlayerStates.Airborne))
             {
                 if (_currentRail == null && !Ctx.GroundDetector.HasAnyHit() || !Ctx.RailDetector.HasAnyHit() && !Ctx.GroundDetector.HasAnyHit())
                 {
-                    if (TrySwitchState(PlayerStates.Falling))
+                    if (TrySwitchState(PlayerStates.Airborne))
                         return;
                 }
             }

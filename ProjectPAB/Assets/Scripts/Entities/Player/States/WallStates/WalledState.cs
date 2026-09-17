@@ -172,11 +172,11 @@ namespace Entities.Player.States
                 }
             }
 
-            if (Factory.HasState(PlayerStates.Falling))
+            if (Factory.HasState(PlayerStates.Airborne))
             {
                 if (!Ctx.WallDetector.HasAnyHit())
                 {
-                    if (TrySwitchState(PlayerStates.Falling))
+                    if (TrySwitchState(PlayerStates.Airborne))
                         return;
                 }
             }

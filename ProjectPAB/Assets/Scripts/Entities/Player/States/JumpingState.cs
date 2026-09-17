@@ -60,6 +60,10 @@ namespace Entities.Player.States
             if (previousState.StateKey == PlayerStates.Grounded)
             {
                 Ctx.GroundDetector.RegisterJumpTime();
+
+                // A jump off the ground is what earns the strafe boost — granted here instead of
+                // per-frame in Grounded, so frame-perfect (buffered) bunny hops still receive it.
+                Ctx.AirStrafeSpeedBoost = true;
             }
             else if (previousState.StateKey == PlayerStates.Walled)
             {
@@ -84,9 +88,13 @@ namespace Entities.Player.States
 
             Ctx.GroundDetector.RemoveCheck(GroundCheck);
 
+            Ctx.RailDetector.RemoveCheck(RailCheck);
+
             Ctx.WallDetector.RemoveCheck(FrontCheck);
             Ctx.WallDetector.RemoveCheck(RightCheck);
             Ctx.WallDetector.RemoveCheck(LeftCheck);
+
+            Ctx.WaterDetector.RemoveCheck(WaterCheck);
 
             Ctx.BarDetector.RemoveCheck(BarCheck);
         }
@@ -120,10 +128,19 @@ namespace Entities.Player.States
 
         public override void InitializeSubState()
         {
+            if (Factory.HasState(PlayerStates.Falling))
+            {
+                if (Ctx.IsMovementInput && Ctx.GroundDetector.HasAnyHit())
+                {
+                    if (TrySwitchSubState(PlayerStates.Falling))
+                        return;
+                }
+            }
+
             if (Factory.HasState(PlayerStates.Idling))
             {
-                TrySwitchSubState(PlayerStates.Idling);
-                return;
+                if (TrySwitchSubState(PlayerStates.Idling))
+                    return;
             }
         }
 
@@ -138,11 +155,11 @@ namespace Entities.Player.States
                 }
             }
 
-            if (Factory.HasState(PlayerStates.Falling))
+            if (Factory.HasState(PlayerStates.Airborne))
             {
                 if (Ctx.JumpToFallingTime <= 0)
                 {
-                    TrySwitchState(PlayerStates.Falling);
+                    TrySwitchState(PlayerStates.Airborne);
                     return;
                 }
             }

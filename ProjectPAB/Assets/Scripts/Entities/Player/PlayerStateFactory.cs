@@ -6,11 +6,11 @@ namespace Entities.Player
 {
     public enum PlayerStates
     {
-        None,
+        NONE,
 
         // Root States
         Grounded,
-        Falling,
+        Airborne,
         Jumping,
         Walled,
         Railed,
@@ -23,6 +23,8 @@ namespace Entities.Player
         Running,
         Sliding,
         Diving,
+        Swinging,
+        Falling,
 
         // Specialized Movement
         Climbing,
@@ -31,7 +33,6 @@ namespace Entities.Player
         WallClinging,
         WallLunging,
         LedgeHanging,
-        Swinging,
 
         // Combat/Action Keys (Generic slots for swapped weapons)
         PrimaryAction,
@@ -59,7 +60,7 @@ namespace Entities.Player
 
             // --- Root States ---
             RegisterState(PlayerStates.Grounded, new GroundedState(_context, this));
-            RegisterState(PlayerStates.Falling, new FallingState(_context, this));
+            RegisterState(PlayerStates.Airborne, new AirborneState(_context, this));
             RegisterState(PlayerStates.Jumping, new JumpingState(_context, this));
             RegisterState(PlayerStates.Walled, new WalledState(_context, this));
             RegisterState(PlayerStates.Railed, new RailedState(_context, this));
@@ -75,6 +76,8 @@ namespace Entities.Player
             RegisterState(PlayerStates.Diving, new DivingState(_context, this));
 
             RegisterState(PlayerStates.Swinging, new SwingingState(_context, this));
+
+            RegisterState(PlayerStates.Falling, new FallingState(_context, this));
 
             // --- Climbing/Wall States ---
             RegisterState(PlayerStates.Climbing, new ClimbingState(_context, this));

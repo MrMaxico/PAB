@@ -15,6 +15,8 @@ namespace Entities.Player
         public PlayerStateMachine StateMachine => _stateMachine;
 
         [Header("References")]
+        #region References
+
         [SerializeField] private Transform _orientation;
         public Transform Orientation => _orientation;
 
@@ -33,7 +35,11 @@ namespace Entities.Player
         [SerializeField] private LayerMask _defaultLayer;
         public LayerMask DefaultLayer => _defaultLayer;
 
+        #endregion
+
         [Header("Detection")]
+        #region Detection
+
         [SerializeField] private GroundDetector _groundDetector;
         public GroundDetector GroundDetector => _groundDetector;
 
@@ -68,7 +74,11 @@ namespace Entities.Player
         [SerializeField] private Vector2 _cameraPitchClamp = new(-40f, 85f);
         public Vector2 CameraPitchClamp => _cameraPitchClamp;
 
+        #endregion
+
         [Header("Movement Settings")]
+        #region Movement Settings
+
         [SerializeField] private float _walkSpeed = 5f;
         public float WalkSpeed => _walkSpeed;
 
@@ -93,7 +103,28 @@ namespace Entities.Player
         [SerializeField] private float _grindSpeed = 12f;
         public float GrindSpeed => _grindSpeed;
 
+        [SerializeField] private float _airStrafeForce = 4f;
+        public float AirStrafeForce => _airStrafeForce;
+
+        [SerializeField] private float _baseAirStrafeSpeed = 7f;
+        public float BaseAirStrafeSpeed => _baseAirStrafeSpeed;
+
+        [SerializeField] private float _airStrafeGain = 1.5f;
+        public float AirStrafeGain => _airStrafeGain;
+
+        [SerializeField] private float _maxAirStrafeSpeed = 13f;
+        public float MaxAirStrafeSpeed => _maxAirStrafeSpeed;
+
+        [Tooltip("Max time between leaving the air and re-entering it for a hop chain to continue. Buffered/held jump re-jumps within ~1 frame (0.02s), so this only needs a little slack.")]
+        [SerializeField] private float _strafeHopWindow = 0.1f;
+        public float StrafeHopWindow => _strafeHopWindow;
+
+
+        #endregion
+
         [Header("Step Settings")]
+        #region Step Settings
+
         [SerializeField] private float _maxStepHeight = 0.3f;
         public float MaxStepHeight => _maxStepHeight;
 
@@ -109,7 +140,11 @@ namespace Entities.Player
         [SerializeField] private float _playerRadius = 0.5f;
         public float PlayerRadius => _playerRadius;
 
+        #endregion
+
         [Header("Bar Settings")]
+        #region Bar Settings
+
         [Tooltip("Pendulum length: how far below the bar the player hangs while swinging.")]
         [SerializeField] private float _barArmLength = 1.5f;
         public float BarArmLength => _barArmLength;
@@ -130,7 +165,11 @@ namespace Entities.Player
         [SerializeField] private float _barLaunchBoost = 1.2f;
         public float BarLaunchBoost => _barLaunchBoost;
 
+        #endregion
+
         [Header("Skateboard Settings")]
+        #region Skateboard Settings
+
         [SerializeField] private float _maxSkateboardSpeed = 12f;
         public float MaxSkateboardSpeed => _maxSkateboardSpeed;
 
@@ -148,6 +187,8 @@ namespace Entities.Player
 
         [SerializeField] private float _skateGravityMultiplier = 1.5f;
         public float SkateGravityMultiplier => _skateGravityMultiplier;
+
+        #endregion
 
         protected override void Awake()
         {

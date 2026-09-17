@@ -12,7 +12,6 @@ namespace Entities.Player.States
         public DivingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Diving;
-            StateType = PlayerStateType.Movement;
         }
 
         public override void EnterState(PlayerBaseState previousState)

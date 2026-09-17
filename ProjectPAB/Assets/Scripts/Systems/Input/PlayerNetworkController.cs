@@ -16,7 +16,7 @@ namespace Systems.Input
         [SerializeField] private PlayerStateMachine _stateMachine;
 
         private NetworkVariable<PlayerStates> _networkedRootState = new(
-            PlayerStates.Falling,
+            PlayerStates.Airborne,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 

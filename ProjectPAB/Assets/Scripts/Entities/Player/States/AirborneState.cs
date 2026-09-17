@@ -1,0 +1,167 @@
+using Entities.Player.States.Base;
+using Systems.Input;
+using UnityEngine;
+
+namespace Entities.Player.States
+{
+    public class AirborneState : PlayerBaseState
+    {
+        private const string GroundCheck = "Ground";
+
+        private const string RailCheck = "Rail";
+
+        private const string FrontCheck = "Front";
+        private const string RightCheck = "Right";
+        private const string LeftCheck = "Left";
+
+        private const string WaterCheck = "Water";
+
+        private const string BarCheck = "Bar";
+
+        public AirborneState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
+        {
+            StateKey = PlayerStates.Airborne;
+        }
+
+        public override void EnterState(PlayerBaseState previousState)
+        {
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
+#endif
+
+            Ctx.GroundDetector.AddSphere(GroundCheck, 0.8f, 0.5f);
+
+            Ctx.RailDetector.AddSphere(RailCheck, 0.8f, 0.35f);
+
+            Ctx.WallDetector.AddSphere(FrontCheck, Vector3.forward, 0.7f, 0.3f);
+
+            Ctx.WaterDetector.AddMovementSphere(WaterCheck, 1f, 0.1f);
+
+            Ctx.BarDetector.AddSphere(BarCheck, 2f, 0.3f);
+
+            if (Factory.HasState(PlayerStates.WallWalking))
+            {
+                Ctx.WallDetector.AddRay(RightCheck, Vector3.right, 0.7f);
+                Ctx.WallDetector.AddRay(LeftCheck, Vector3.left, 0.7f);
+            }
+
+            Ctx.GroundDetector.Tick();
+            Ctx.RailDetector.Tick();
+            Ctx.WallDetector.Tick();
+            Ctx.BarDetector.Tick();
+        }
+
+        public override void ExitState(PlayerBaseState nextState)
+        {
+#if UNITY_EDITOR
+            if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+#endif
+
+            Ctx.GroundDetector.RemoveCheck(GroundCheck);
+
+            Ctx.RailDetector.RemoveCheck(RailCheck);
+
+            Ctx.WallDetector.RemoveCheck(FrontCheck);
+            Ctx.WallDetector.RemoveCheck(RightCheck);
+            Ctx.WallDetector.RemoveCheck(LeftCheck);
+
+            Ctx.WaterDetector.RemoveCheck(WaterCheck);
+
+            Ctx.BarDetector.RemoveCheck(BarCheck);
+        }
+
+        #region Inputs
+
+        protected override void HandleInputAction(IInputProvider input)
+        {
+            if (Factory.HasState(PlayerStates.Jumping))
+            {
+                if (Ctx.JumpsLeft > 0 && Ctx.GroundDetector.CoyoteTimeCounter > 0)
+                {
+                    if (input.JumpState.UseBufferedPress())
+                    {
+                        if (TrySwitchState(PlayerStates.Jumping))
+                            return;
+                    }
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Diving))
+            {
+                if (input.DiveState.IsPressed)
+                {
+                    if (TrySwitchState(PlayerStates.Diving))
+                        return;
+                }
+            }
+        }
+
+        #endregion
+
+        public override void InitializeSubState()
+        {
+            if (Factory.HasState(PlayerStates.Falling))
+            {
+                if (Ctx.IsMovementInput)
+                {
+                    if (TrySwitchSubState(PlayerStates.Falling))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Idling))
+            {
+                if (TrySwitchSubState(PlayerStates.Idling))
+                    return;
+            }
+        }
+
+        public override void CheckSwitchState()
+        {
+            if (Factory.HasState(PlayerStates.Waterborne))
+            {
+                if (Ctx.WaterDetector.HasAnyHit())
+                {
+                    if (TrySwitchState(PlayerStates.Waterborne))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Railed))
+            {
+                if (Ctx.RailDetector.HasAnyHit())
+                {
+                    if (TrySwitchState(PlayerStates.Railed))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Barred))
+            {
+                if (Ctx.BarDetector.HasAnyHit())
+                {
+                    if (TrySwitchState(PlayerStates.Barred))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Grounded))
+            {
+                if (Ctx.GroundDetector.HasAnyHit())
+                {
+                    if (TrySwitchState(PlayerStates.Grounded))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Walled))
+            {
+                if (Ctx.WallDetector.HasAnyHit())
+                {
+                    if (TrySwitchState(PlayerStates.Walled))
+                        return;
+                }
+            }
+        }
+    }
+}

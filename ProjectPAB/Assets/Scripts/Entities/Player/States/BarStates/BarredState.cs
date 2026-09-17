@@ -42,7 +42,7 @@ namespace Entities.Player.States
             Ctx.Rigidbody.useGravity = false;
             Ctx.Rigidbody.isKinematic = true;
 
-            Ctx.BarDetector.AddSphere(BarCheck, 2, 0.3f);
+            Ctx.BarDetector.AddSphere(BarCheck, GrabRadius, 0.3f);
 
             GrabBar();
         }
@@ -120,11 +120,11 @@ namespace Entities.Player.States
 
         public override void CheckSwitchState()
         {
-            if (Factory.HasState(PlayerStates.Falling))
+            if (Factory.HasState(PlayerStates.Airborne))
             {
                 if (!HasBar)
                 {
-                    if (TrySwitchState(PlayerStates.Falling))
+                    if (TrySwitchState(PlayerStates.Airborne))
                         return;
                 }
             }

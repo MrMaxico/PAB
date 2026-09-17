@@ -514,6 +514,8 @@ MonoBehaviour:
   _maxSlideSpeed: 25
   _slideAcceleration: 1.5
   _grindSpeed: 12
+  _airStrafeForce: 4
+  _maxAirStrafeSpeed: 13
   _maxStepHeight: 0.6
   _stepCheckDistance: 0.5
   _stepInset: 0.2
@@ -645,7 +647,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d1df5030e7715094ea90268ad2c291ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _doDebug: 0
+  _doDebug: 1
   _playerContext: {fileID: 8997811308664197890}
   _maxJumps: 1
   _jumpToFallingTime: 0
