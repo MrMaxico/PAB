@@ -1,6 +1,6 @@
-using Entities.Player.Detection;
-using Entities.Player.States.Base;
-using System;
+using Entities.Base;
+using Entities.Base.Detection;
+using Entities.Player.States;
 using Systems.Input;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,24 +8,11 @@ using UnityEngine.UI;
 namespace Entities.Player
 {
     [RequireComponent(typeof(PlayerContext))]
-    public class PlayerStateMachine : MonoBehaviour
+    public class PlayerStateMachine : EntityStateMachine
     {
         [Header("Debug")]
         [SerializeField] private bool _doDebug = false;
         public bool DoDebug => _doDebug;
-
-        [Header("State System")]
-        [SerializeField] private PlayerStateFactory _stateFactory;
-        public PlayerStateFactory Factory => _stateFactory;
-
-        [SerializeField] private PlayerBaseState _currentRootState;
-        public PlayerBaseState CurrentState
-        {
-            get => _currentRootState; set => _currentRootState = value;
-        }
-
-        private PlayerBaseState _currentContextState;
-        public PlayerBaseState CurrentContextState => _currentContextState;
 
         [SerializeField] private PlayerContext _playerContext;
         public PlayerContext PlayerContext
@@ -60,12 +47,69 @@ namespace Entities.Player
         public Transform CameraHolder => PlayerContext.CameraHolder;
         public Transform FirstPersonAnchor => PlayerContext.FirstPersonAnchor;
 
-        // Detection proxies
-        public GroundDetector GroundDetector => PlayerContext.GroundDetector;
-        public WallDetector WallDetector => PlayerContext.WallDetector;
-        public RailDetector RailDetector => PlayerContext.RailDetector;
-        public WaterDetector WaterDetector => PlayerContext.WaterDetector;
-        public BarDetector BarDetector => PlayerContext.BarDetector;
+        #region Detection
+
+        // Shared suppression timers: suppressing one makes every probe of that kind report no hit
+        // for a moment (e.g. ignore the ground right after jumping off it).
+        public ProbeGate GroundGate { get; } = new();
+        public ProbeGate WallGate { get; } = new();
+        public ProbeGate RailGate { get; } = new();
+        public ProbeGate BarGate { get; } = new();
+
+        /// <summary>The active root state's ground probe. Root states set this in EnterState so sub-states read the same probe.</summary>
+        public Probe Ground { get; set; }
+
+        /// <summary>The active root state's wall probes in priority order. Root states set this in EnterState.</summary>
+        public ProbeGroup Walls { get; set; } = ProbeGroup.Empty;
+
+        /// <summary>The active root state's rail probe. Root states set this in EnterState.</summary>
+        public Probe Bar { get; set; }
+
+        /// <summary>Last time the Grounded state's ground probe hit. Drives coyote time.</summary>
+        public float LastGroundedTime { get; set; } = float.NegativeInfinity;
+        public bool InCoyoteTime => Time.time - LastGroundedTime < PlayerContext.CoyoteTime;
+
+        /// <summary>Direction along a wall: velocity on the wall plane, or the model's forward when barely moving.</summary>
+        public Vector3 WallForward(RaycastHit wallHit) => wallHit.WallForward(Rigidbody.linearVelocity, PlayerModel.forward);
+
+        public Probe CreateGroundProbe(float distance, float radius) =>
+            Probe.Sphere(Rigidbody, Vector3.down, distance, radius)
+                .On(PlayerContext.GroundLayer)
+                .Offset(Vector3.up * PlayerContext.GroundProbeHeight)
+                .Gated(GroundGate);
+
+        public Probe CreateRailProbe(float distance, float radius) =>
+            Probe.Sphere(Rigidbody, Vector3.down, distance, radius)
+                .On(PlayerContext.RailLayer)
+                .Offset(Vector3.up * PlayerContext.GroundProbeHeight)
+                .Gated(RailGate);
+
+        /// <summary>Wall sphere cast. <paramref name="localDirection"/> is relative to the player model.</summary>
+        public Probe CreateWallSphere(Vector3 localDirection, float distance, float radius) =>
+            Probe.Sphere(Rigidbody, localDirection, distance, radius)
+                .On(PlayerContext.WallLayer)
+                .Offset(Vector3.up * PlayerContext.WallProbeHeight)
+                .RelativeTo(PlayerModel)
+                .Gated(WallGate);
+
+        /// <summary>Wall raycast. <paramref name="localDirection"/> is relative to the player model.</summary>
+        public Probe CreateWallRay(Vector3 localDirection, float distance) =>
+            Probe.Ray(Rigidbody, localDirection, distance)
+                .On(PlayerContext.WallLayer)
+                .Offset(Vector3.up * PlayerContext.WallProbeHeight)
+                .RelativeTo(PlayerModel)
+                .Gated(WallGate);
+
+        /// <summary>Bar overlap sphere. <paramref name="localDirection"/> is relative to the player model.</summary>
+        public Probe CreateBarProbe(Vector3 localDirection, float distance, float radius) =>
+            Probe.OverlapSphere(Rigidbody, localDirection, distance, radius)
+                .On(PlayerContext.BarLayer)
+                .Offset(Vector3.up * PlayerContext.BarProbeHeight)
+                .RelativeTo(PlayerModel)
+                .IncludeTriggers()
+                .Gated(BarGate);
+
+        #endregion
 
         #region Jump
 
@@ -145,8 +189,6 @@ namespace Entities.Player
 
         public Vector3 PlatformVelocity { get; set; }
 
-        public Vector3 WaterMovementDirection { get; set; }
-
         #endregion
 
         #region Step
@@ -181,28 +223,14 @@ namespace Entities.Player
 
         #endregion
 
-        #region StateTransitionEvents
-
-        public event Action<PlayerStates> OnRootStateTransitioned;
-        public event Action<PlayerStates> OnMovementStateTransitioned;
-        public event Action<PlayerStates> OnActionStateTransitioned;
-        public event Action<PlayerStates> OnContextStateTransitioned;
-
-        public void InvokeRootStateTransitioned(PlayerStates state) => OnRootStateTransitioned?.Invoke(state);
-        public void InvokeMovementStateTransitioned(PlayerStates state) => OnMovementStateTransitioned?.Invoke(state);
-        public void InvokeActionStateTransitioned(PlayerStates state) => OnActionStateTransitioned?.Invoke(state);
-        public void InvokeContextStateTransitioned(PlayerStates state) => OnContextStateTransitioned?.Invoke(state);
-
-        #endregion
-
         private void Start()
         {
-            _stateFactory = new PlayerStateFactory(this);
+            Factory = new PlayerStateFactory(this);
 
             if (IsLocalPlayer)
             {
-                _currentRootState = _stateFactory.GetState(PlayerStates.Airborne);
-                _currentRootState.EnterState();
+                CurrentState = Factory.GetState(PlayerStates.Airborne);
+                CurrentState.EnterState();
 
                 SwitchContextState(PlayerStates.ThirdPersonCamera);
 
@@ -219,8 +247,7 @@ namespace Entities.Player
             {
                 HandleInputs();
 
-                _currentRootState?.UpdateStates();
-                _currentContextState?.UpdateStates();
+                UpdateActiveStates();
 
                 if (_staminaBar != null)
                     _staminaBar.value = Stamina;
@@ -234,20 +261,9 @@ namespace Entities.Player
                 if (_stepUpGraceTime > 0f)
                     _stepUpGraceTime -= Time.fixedDeltaTime;
 
-                GroundDetector.Tick();
-                WallDetector.Tick(MoveDirection);
-                RailDetector.Tick();
-                BarDetector.Tick();
+                FixedUpdateActiveStates();
 
-                WaterMovementDirection = Rigidbody.linearVelocity;
-                WaterDetector.Tick(WaterMovementDirection);
-                WaterDetector.TickSubmersion(Collider);
-
-                _currentRootState?.FixedUpdateStates();
-                _currentContextState?.FixedUpdateStates();
-
-                _currentRootState?.CheckSwitchStates();
-                _currentContextState?.CheckSwitchStates();
+                CheckActiveStateSwitches();
             }
         }
 
@@ -255,8 +271,7 @@ namespace Entities.Player
         {
             if (IsLocalPlayer)
             {
-                _currentRootState?.LateUpdateStates();
-                _currentContextState?.LateUpdateStates();
+                LateUpdateActiveStates();
             }
         }
 
@@ -273,77 +288,16 @@ namespace Entities.Player
             _isMovementInput = InputProvider.MovementState.RawInputValue.magnitude > _moveThreshold;
             _isRunInput = InputProvider.RunState.RawInputValue;
 
-            _currentRootState?.HandleInputActions(InputProvider);
-            _currentContextState?.HandleInputActions(InputProvider);
+            HandleActiveStateInputs(InputProvider);
         }
 
         public bool IsLocalPlayer { get; set; } = true;
 
         public bool RotationSnapped { get; set; }
 
-        private bool _mStateToggle = false;
+        // Add near other shared runtime detection/state fields
 
-        // ─── State transitions ─── \\
-
-        public void SwitchRootState(PlayerStates nextState)
-        {
-            PlayerBaseState previousState = _currentRootState;
-            PlayerBaseState nextStateInstance = _stateFactory.GetState(nextState);
-
-            _currentRootState?.ExitStates(nextStateInstance);
-
-            _currentRootState = nextStateInstance;
-            _currentRootState.EnterState(previousState);
-        }
-
-        public void SwitchMovementState(PlayerStates nextSubState)
-        {
-            if (_currentRootState == null) return;
-
-            PlayerBaseState previousSub = _currentRootState.MovementSubState;
-            PlayerBaseState nextInstance = _stateFactory.GetState(nextSubState);
-
-            previousSub?.ExitStates(nextInstance);
-            _currentRootState.MovementSubState = nextInstance;
-            nextInstance?.EnterState(previousSub);
-        }
-
-        public void SwitchActionState(PlayerStates nextSubState)
-        {
-            if (_currentRootState == null) return;
-
-            PlayerBaseState previousSub = _currentRootState.ActionSubState;
-            PlayerBaseState nextInstance = _stateFactory.GetState(nextSubState);
-
-            previousSub?.ExitStates(nextInstance);
-            _currentRootState.ActionSubState = nextInstance;
-            nextInstance?.EnterState(previousSub);
-        }
-
-        /// <summary>
-        /// Switches the active context state. Context lives at the machine level
-        /// and persists across root state transitions automatically.
-        /// </summary>
-        public void SwitchContextState(PlayerStates contextState)
-        {
-            PlayerBaseState newContext = _stateFactory.GetState(contextState);
-            if (newContext == null || newContext.StateType != PlayerStateType.Context) return;
-            if (newContext.StateKey == _currentContextState?.StateKey) return;
-
-            PlayerBaseState previousContext = _currentContextState;
-            _currentContextState?.ExitStates(newContext);
-
-            _currentContextState = newContext;
-
-            InvokeContextStateTransitioned(contextState);
-            _currentContextState.EnterState(previousContext);
-            _currentContextState.InitializeSubStates();
-        }
-
-        public void ClearContextState()
-        {
-            _currentContextState?.ExitStates(null);
-            _currentContextState = null;
-        }
+        public Vector3 BarPivot { get; set; }
+        public Vector3 BarAxis { get; set; } = Vector3.right;
     }
 }

@@ -1,4 +1,6 @@
+using Entities.Base.States;
 using Entities.Player;
+using Entities.Player.States;
 using System;
 using Unity.Netcode;
 using UnityEngine;
@@ -15,30 +17,34 @@ namespace Systems.Input
         [SerializeField] private AudioListener _audioListener;
         [SerializeField] private PlayerStateMachine _stateMachine;
 
-        private NetworkVariable<PlayerStates> _networkedRootState = new(
-            PlayerStates.Airborne,
+        // Synced as StateKey.Id; resolved back with Factory.GetKey.
+        private NetworkVariable<int> _networkedRootState = new(
+            PlayerStates.Airborne.Id,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
-        private NetworkVariable<PlayerStates> _networkedMovementState = new(
-            PlayerStates.Idling,
+        // Synced as StateKey.Id; resolved back with Factory.GetKey.
+        private NetworkVariable<int> _networkedMovementState = new(
+            PlayerStates.Idling.Id,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
-        private NetworkVariable<PlayerStates> _networkedActionState = new(
-            PlayerStates.PrimaryAction,
+        // Synced as StateKey.Id; resolved back with Factory.GetKey.
+        private NetworkVariable<int> _networkedActionState = new(
+            PlayerStates.PrimaryAction.Id,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
-        private NetworkVariable<PlayerStates> _networkedContextState = new(
-            PlayerStates.ThirdPersonCamera,
+        // Synced as StateKey.Id; resolved back with Factory.GetKey.
+        private NetworkVariable<int> _networkedContextState = new(
+            PlayerStates.ThirdPersonCamera.Id,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
-        private Action<PlayerStates> _onRootTransitioned;
-        private Action<PlayerStates> _onMovementTransitioned;
-        private Action<PlayerStates> _onActionTransitioned;
-        private Action<PlayerStates> _onContextTransitioned;
+        private Action<StateKey> _onRootTransitioned;
+        private Action<StateKey> _onMovementTransitioned;
+        private Action<StateKey> _onActionTransitioned;
+        private Action<StateKey> _onContextTransitioned;
 
         public override void OnNetworkSpawn()
         {
@@ -51,10 +57,10 @@ namespace Systems.Input
                 _localInputProvider.enabled = true;
                 _networkInputProvider.enabled = false;
 
-                _stateMachine.OnRootStateTransitioned += _onRootTransitioned = s => _networkedRootState.Value = s;
-                _stateMachine.OnMovementStateTransitioned += _onMovementTransitioned = s => _networkedMovementState.Value = s;
-                _stateMachine.OnActionStateTransitioned += _onActionTransitioned = s => _networkedActionState.Value = s;
-                _stateMachine.OnContextStateTransitioned += _onContextTransitioned = s => _networkedContextState.Value = s;
+                _stateMachine.OnRootStateTransitioned += _onRootTransitioned = s => _networkedRootState.Value = s.Id;
+                _stateMachine.OnMovementStateTransitioned += _onMovementTransitioned = s => _networkedMovementState.Value = s.Id;
+                _stateMachine.OnActionStateTransitioned += _onActionTransitioned = s => _networkedActionState.Value = s.Id;
+                _stateMachine.OnContextStateTransitioned += _onContextTransitioned = s => _networkedContextState.Value = s.Id;
             }
             else
             {
@@ -90,25 +96,27 @@ namespace Systems.Input
             }
         }
 
-        private void OnRootStateChanged(PlayerStates previousState, PlayerStates nextState)
+        private void OnRootStateChanged(int previousState, int nextState)
         {
-            _stateMachine.SwitchRootState(nextState);
+            _stateMachine.SwitchRootState(ResolveKey(nextState));
         }
 
-        private void OnMovementStateChanged(PlayerStates previousState, PlayerStates nextState)
+        private void OnMovementStateChanged(int previousState, int nextState)
         {
-            _stateMachine.SwitchMovementState(nextState);
+            _stateMachine.SwitchMovementState(ResolveKey(nextState));
         }
 
-        private void OnActionStateChanged(PlayerStates previousState, PlayerStates nextState)
+        private void OnActionStateChanged(int previousState, int nextState)
         {
-            _stateMachine.SwitchActionState(nextState);
+            _stateMachine.SwitchActionState(ResolveKey(nextState));
         }
 
-        private void OnContextStateChanged(PlayerStates previousState, PlayerStates nextState)
+        private void OnContextStateChanged(int previousState, int nextState)
         {
-            _stateMachine.SwitchContextState(nextState);
+            _stateMachine.SwitchContextState(ResolveKey(nextState));
         }
+
+        private StateKey ResolveKey(int id) => _stateMachine.Factory?.GetKey(id);
 
         private int _lastSentTick;
 

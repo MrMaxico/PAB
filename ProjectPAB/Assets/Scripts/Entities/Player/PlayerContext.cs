@@ -1,4 +1,4 @@
-using Entities.Player.Detection;
+using Entities.Base;
 using Systems.Input;
 using UnityEngine;
 
@@ -40,20 +40,53 @@ namespace Entities.Player
         [Header("Detection")]
         #region Detection
 
-        [SerializeField] private GroundDetector _groundDetector;
-        public GroundDetector GroundDetector => _groundDetector;
+        [SerializeField] private LayerMask _groundLayer = 1;   // Default
+        public LayerMask GroundLayer => _groundLayer;
 
-        [SerializeField] private WallDetector _wallDetector;
-        public WallDetector WallDetector => _wallDetector;
+        [SerializeField] private LayerMask _wallLayer = 1;     // Default
+        public LayerMask WallLayer => _wallLayer;
 
-        [SerializeField] private RailDetector _railDetector;
-        public RailDetector RailDetector => _railDetector;
+        [SerializeField] private LayerMask _railLayer = 64;    // Rail
+        public LayerMask RailLayer => _railLayer;
 
-        [SerializeField] private WaterDetector _waterDetector;
-        public WaterDetector WaterDetector => _waterDetector;
+        [SerializeField] private LayerMask _barLayer = 7;    // Bar
+        public LayerMask BarLayer => _barLayer;
 
-        [SerializeField] private BarDetector _barDetector;
-        public BarDetector BarDetector => _barDetector;
+        [Tooltip("Height above the body position that ground and rail probes start from.")]
+        [SerializeField] private float _groundProbeHeight = 0.1f;
+        public float GroundProbeHeight => _groundProbeHeight;
+
+        [Tooltip("Height above the body position that wall probes start from.")]
+        [SerializeField] private float _wallProbeHeight = 0.5f;
+        public float WallProbeHeight => _wallProbeHeight;
+
+        [Tooltip("Height above the body position that bar probes start from.")]
+        [SerializeField] private float _barProbeHeight = 0.5f;
+        public float BarProbeHeight => _barProbeHeight;
+
+        [SerializeField] private float _maxSlopeAngle = 45f;
+        public float MaxSlopeAngle => _maxSlopeAngle;
+
+        [Tooltip("How long after last touching the ground a jump is still allowed.")]
+        [SerializeField] private float _coyoteTime = 0.5f;
+        public float CoyoteTime => _coyoteTime;
+
+        [Tooltip("After jumping off a surface, ignore that kind of surface for this long so you don't instantly re-attach.")]
+        [SerializeField] private float _groundJumpGrace = 0.3f;
+        public float GroundJumpGrace => _groundJumpGrace;
+
+        [SerializeField] private float _wallJumpGrace = 0.1f;
+        public float WallJumpGrace => _wallJumpGrace;
+
+        [SerializeField] private float _railJumpGrace = 0.3f;
+        public float RailJumpGrace => _railJumpGrace;
+
+        [SerializeField] private float _barJumpGrace = 0.3f;
+        public float BarJumpGrace => _barJumpGrace;
+
+        [SerializeField] private float _sameBarJumpGrace = 0.8f;
+        public float SameBarJumpGrace => _sameBarJumpGrace;
+
 
         [Header("Camera")]
         [SerializeField] private Transform _cameraHolder;
@@ -90,15 +123,6 @@ namespace Entities.Player
 
         [SerializeField] private float _wallRunSpeed = 10f;
         public float WallRunSpeed => _wallRunSpeed;
-
-        [SerializeField] private float _baseSlideSpeed = 6f;
-        public float BaseSlideSpeed => _baseSlideSpeed;
-
-        [SerializeField] private float _maxSlideSpeed = 15f;
-        public float MaxSlideSpeed => _maxSlideSpeed;
-
-        [SerializeField] private float _slideAcceleration = 5f;
-        public float SlideAcceleration => _slideAcceleration;
 
         [SerializeField] private float _grindSpeed = 12f;
         public float GrindSpeed => _grindSpeed;
@@ -142,51 +166,23 @@ namespace Entities.Player
 
         #endregion
 
-        [Header("Bar Settings")]
-        #region Bar Settings
+        [Header("Swing Settings")]
+        #region Swing Settings
 
-        [Tooltip("Pendulum length: how far below the bar the player hangs while swinging.")]
-        [SerializeField] private float _barArmLength = 1.5f;
-        public float BarArmLength => _barArmLength;
+        [SerializeField] private float _swingLength = 1.6f;
+        public float SwingLength => _swingLength;
 
-        [Tooltip("Angular acceleration (rad/s^2) added by holding the pump input.")]
-        [SerializeField] private float _barPumpAcceleration = 4f;
-        public float BarPumpAcceleration => _barPumpAcceleration;
+        [SerializeField] private float _swingPumpStrength = 6f;
+        public float SwingPumpStrength => _swingPumpStrength;
 
-        [Tooltip("How quickly an un-pumped swing settles. 0 = swings forever.")]
-        [SerializeField] private float _barSwingDamping = 0.3f;
-        public float BarSwingDamping => _barSwingDamping;
+        [SerializeField] private float _swingDamping = 0.35f;
+        public float SwingDamping => _swingDamping;
 
-        [Tooltip("Cap on swing speed (rad/s).")]
-        [SerializeField] private float _barMaxAngularSpeed = 6f;
-        public float BarMaxAngularSpeed => _barMaxAngularSpeed;
+        [SerializeField] private float _swingGravity = 9.81f;
+        public float SwingGravity => _swingGravity;
 
-        [Tooltip("Upward component of the launch direction when jumping off a bar.")]
-        [SerializeField] private float _barLaunchBoost = 1.2f;
-        public float BarLaunchBoost => _barLaunchBoost;
-
-        #endregion
-
-        [Header("Skateboard Settings")]
-        #region Skateboard Settings
-
-        [SerializeField] private float _maxSkateboardSpeed = 12f;
-        public float MaxSkateboardSpeed => _maxSkateboardSpeed;
-
-        [SerializeField] private float _brakeStrength = 10f;
-        public float BrakeStrength => _brakeStrength;
-
-        [SerializeField] private float _pushForce = 5f;
-        public float PushForce => _pushForce;
-
-        [SerializeField] private float _turnSpeed = 100f;
-        public float TurnSpeed => _turnSpeed;
-
-        [SerializeField] private float _turnGripStrength = 5f;
-        public float TurnGripStrength => _turnGripStrength;
-
-        [SerializeField] private float _skateGravityMultiplier = 1.5f;
-        public float SkateGravityMultiplier => _skateGravityMultiplier;
+        [SerializeField] private float _swingReleaseBoost = 2f;
+        public float SwingReleaseBoost => _swingReleaseBoost;
 
         #endregion
 
