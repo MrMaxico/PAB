@@ -18,6 +18,10 @@ namespace Entities.Player.States
         private float _facingSign = 1f;
         private Vector3 _bottomTangent;
 
+        // Local-T of the pivot along the bar's axis at grab time.
+        // Re-converting this each frame keeps the pivot in sync with a moving bar.
+        private float _pivotLocalT;
+
         public SwingingState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Swinging;
@@ -27,30 +31,41 @@ namespace Entities.Player.States
         {
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 
-            if (CurrentSuperState is BarredState barred)
-            {
-                _bottomTangent = barred.BottomTangent;
-                _angle = barred.EntryAngle;
-                _angularVelocity = barred.EntryAngularVelocity;
-                _facingSign = barred.FacingSign >= 0f ? 1f : -1f;
-            }
-            else
-            {
-                float length = Mathf.Max(0.5f, Ctx.PlayerContext.SwingLength);
-                Vector3 radial = (Ctx.Rigidbody.position - Ctx.BarPivot).normalized;
-                Vector3 tangent = Vector3.Cross(Ctx.BarAxis, radial).normalized;
+            Vector3 entryVelocity = Ctx.Rigidbody.linearVelocity;
 
-                _bottomTangent = Vector3.Cross(Ctx.BarAxis, Vector3.down).normalized;
-                if (_bottomTangent.sqrMagnitude < 0.0001f)
-                    _bottomTangent = Vector3.forward;
+            float length = Mathf.Max(0.5f, Ctx.PlayerContext.SwingLength);
 
-                _angle = Vector3.SignedAngle(Vector3.down, radial, Ctx.BarAxis) * Mathf.Deg2Rad;
-                _angularVelocity = Vector3.Dot(Ctx.Rigidbody.linearVelocity, tangent) / length;
-                _facingSign = 1f;
-            }
+            Vector3 radial = Ctx.Rigidbody.position - Ctx.BarPivot;
+            if (radial.sqrMagnitude < 0.0001f)
+                radial = Vector3.down;
+
+            radial.Normalize();
+
+            Vector3 tangent = Vector3.Cross(Ctx.BarAxis, radial).normalized;
+
+            _bottomTangent = Vector3.Cross(Ctx.BarAxis, Vector3.down).normalized;
+
+            if (_bottomTangent.sqrMagnitude < 0.0001f)
+                _bottomTangent = Vector3.forward;
+
+            _angle = Vector3.SignedAngle(Vector3.down, radial, Ctx.BarAxis) * Mathf.Deg2Rad;
+            _angularVelocity = Vector3.Dot(entryVelocity, tangent) / length;
+
+            Vector3 entryFwd = Vector3.ProjectOnPlane(Ctx.PlayerModel.forward, Vector3.up);
+
+            if (entryFwd.sqrMagnitude < 0.0001f)
+                entryFwd = Vector3.ProjectOnPlane(entryVelocity, Vector3.up);
+            if (entryFwd.sqrMagnitude < 0.0001f)
+                entryFwd = _bottomTangent;
+
+            _facingSign = Vector3.Dot(entryFwd, _bottomTangent) >= 0f ? 1f : -1f;
 
             _releaseVelocity = Vector3.zero;
             Ctx.Rigidbody.useGravity = false;
+            Ctx.Rigidbody.linearVelocity = Vector3.zero;
+
+            Vector3 startRadial = Quaternion.AngleAxis(_angle * Mathf.Rad2Deg, Ctx.BarAxis) * Vector3.down;
+            Ctx.Rigidbody.position = Ctx.BarPivot + startRadial * length;
         }
 
         public override void ExitState(EntityBaseState nextState = null)
@@ -63,6 +78,13 @@ namespace Entities.Player.States
 
         public override void FixedUpdateState()
         {
+            // Keep the pivot and axis in sync with a moving bar.
+            if (Ctx.CurrentBarAttachment != null)
+            {
+                Ctx.BarPivot = Ctx.CurrentBarAttachment.LocalTToWorld(_pivotLocalT);
+                Ctx.BarAxis = Ctx.CurrentBarAttachment.Axis;
+            }
+
             float length = Mathf.Max(0.5f, Ctx.PlayerContext.SwingLength);
 
             Vector3 radial = Quaternion.AngleAxis(_angle * Mathf.Rad2Deg, Ctx.BarAxis) * Vector3.down;
@@ -131,18 +153,24 @@ namespace Entities.Player.States
 
             if (tangentialSpeed < JumpOffMinTangentialSpeed)
             {
-                if (Factory.HasState(PlayerStates.Airborne) && TrySwitchRootState(PlayerStates.Airborne))
+                if (Factory.HasState(PlayerStates.Airborne))
                 {
-                    Ctx.BarGate.SuppressFor(Ctx.PlayerContext.SameBarJumpGrace);
-                    return;
+                    if (TrySwitchRootState(PlayerStates.Airborne))
+                    {
+                        Ctx.BarGate.SuppressFor(Ctx.PlayerContext.BarAirborneGrace);
+                        return;
+                    }
                 }
             }
             else
             {
-                if (Factory.HasState(PlayerStates.Jumping) && TrySwitchRootState(PlayerStates.Jumping))
+                if (Factory.HasState(PlayerStates.Jumping))
                 {
-                    Ctx.BarGate.SuppressFor(Ctx.PlayerContext.SameBarJumpGrace);
-                    return;
+                    if (TrySwitchRootState(PlayerStates.Jumping))
+                    {
+                        Ctx.BarGate.SuppressFor(Ctx.PlayerContext.BarJumpGrace);
+                        return;
+                    }
                 }
             }
         }

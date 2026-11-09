@@ -100,14 +100,24 @@ namespace Entities.Player
                 .RelativeTo(PlayerModel)
                 .Gated(WallGate);
 
-        /// <summary>Bar overlap sphere. <paramref name="localDirection"/> is relative to the player model.</summary>
-        public Probe CreateBarProbe(Vector3 localDirection, float distance, float radius) =>
-            Probe.OverlapSphere(Rigidbody, localDirection, distance, radius)
+        /// <summary>Overlap sphere at the player's position (+ BarProbeHeight). No direction or sweep.</summary>
+        public Probe CreateBarSphere(float radius) =>
+            Probe.OverlapSphere(Rigidbody, Vector3.zero, 0f, radius)
+                .On(PlayerContext.BarLayer)
+                .Offset(Vector3.up * PlayerContext.BarProbeHeight)
+                .IncludeTriggers()
+                .Gated(BarGate);
+
+        /// <summary>SphereCast in <paramref name="localDirection"/> (relative to player model). Use to check if a bar is ahead.</summary>
+        public Probe CreateBarSphereCast(Vector3 localDirection, float distance, float radius) =>
+            Probe.Sphere(Rigidbody, localDirection, distance, radius)
                 .On(PlayerContext.BarLayer)
                 .Offset(Vector3.up * PlayerContext.BarProbeHeight)
                 .RelativeTo(PlayerModel)
                 .IncludeTriggers()
                 .Gated(BarGate);
+
+
 
         #endregion
 
@@ -296,6 +306,15 @@ namespace Entities.Player
         public bool RotationSnapped { get; set; }
 
         // Add near other shared runtime detection/state fields
+
+
+        public GameObject CurrentBar { get; set; }
+
+        /// <summary>
+        /// The <see cref="BarAttachment"/> component on the current bar, if one exists.
+        /// Provides precise dimensions and local-T tracking for moving bars.
+        /// </summary>
+        public BarAttachment CurrentBarAttachment { get; set; }
 
         public Vector3 BarPivot { get; set; }
         public Vector3 BarAxis { get; set; } = Vector3.right;

@@ -397,6 +397,7 @@ GameObject:
   - component: {fileID: 474501095859533502}
   - component: {fileID: 1821497253750847027}
   - component: {fileID: 3006045210997315071}
+  - component: {fileID: 9100027275271537828}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -504,12 +505,17 @@ MonoBehaviour:
     m_Bits: 128
   _groundProbeHeight: 0.1
   _wallProbeHeight: 0.5
-  _barProbeHeight: 0.5
+  _barProbeHeight: 0.1
   _maxSlopeAngle: 45
   _coyoteTime: 0.5
   _groundJumpGrace: 0.3
+  _groundBarGrace: 0.3
   _wallJumpGrace: 0.1
   _railJumpGrace: 0.3
+  _barJumpGrace: 0.7
+  _barAirGrace: 0.3
+  _barGroundedGrace: 0.3
+  _barTopEntryAngle: 60
   _cameraHolder: {fileID: 7043682445114242224}
   _firstPersonAnchor: {fileID: 437285140005243748}
   _cameraSensitivity: 5
@@ -531,6 +537,11 @@ MonoBehaviour:
   _stepInset: 0.2
   _treadProbeForward: 0.05
   _playerRadius: 0.5
+  _swingLength: 1.5
+  _swingPumpStrength: 6
+  _swingDamping: 0.35
+  _swingGravity: 9.81
+  _swingReleaseBoost: 2
 --- !u!114 &474501095859533502
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -543,7 +554,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d1df5030e7715094ea90268ad2c291ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _doDebug: 1
+  _doDebug: 0
   _playerContext: {fileID: 8997811308664197890}
   _maxJumps: 1
   _jumpToFallingTime: 0
@@ -611,6 +622,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!114 &9100027275271537828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5876471315240375162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e51974401b3037f4daed06cf0f921e8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Entities.Base.Detection.ProbeDebugDrawer
+  _draw: 1
+  _drawLabels: 1
+  _nameFilter: Grounded_Bar
+  _hitColor: {r: 0, g: 1, b: 0, a: 1}
+  _missColor: {r: 1, g: 0, b: 0, a: 1}
+  _suppressedColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
 --- !u!1 &6597798207201735666
 GameObject:
   m_ObjectHideFlags: 0

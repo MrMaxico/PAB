@@ -11,6 +11,7 @@ namespace Entities.Player.States
         private readonly Probe _ground;
         private readonly Probe _rail;
         private readonly ProbeGroup _walls;
+        private readonly Probe _bar;
 
         private const float CapsuleHalfHeight = 1f;
         private const float SnapDownDistance = 0.5f;
@@ -23,10 +24,11 @@ namespace Entities.Player.States
             StateKey = PlayerStates.Grounded;
 
             _ground = currentContext.CreateGroundProbe(0.8f, 0.5f);
-            _rail = currentContext.CreateRailProbe(1f, 0.35f);
+            _rail = currentContext.CreateRailProbe(1f, 0.35f).When(() => Factory.HasState(PlayerStates.Railed));
             _walls = new ProbeGroup(
                 currentContext.CreateWallSphere(Vector3.forward, 0.7f, 0.3f)
-                    .When(() => Factory.HasState(PlayerStates.Jumping))); // only feeds Walking's auto-jump into walls
+                    .When(() => Factory.HasState(PlayerStates.Jumping)));
+            _bar = currentContext.CreateBarSphereCast(Vector3.down, 0.8f, 0.5f).When(() => Factory.HasState(PlayerStates.Barred)).Named("Grounded_Bar");
         }
 
         public override void EnterState(EntityBaseState previousState)
@@ -307,6 +309,15 @@ namespace Entities.Player.States
                 if (_rail.IsHit)
                 {
                     if (TrySwitchState(PlayerStates.Railed))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Barred))
+            {
+                if (_bar.IsHit)
+                {
+                    if (TrySwitchState(PlayerStates.Barred))
                         return;
                 }
             }

@@ -7,14 +7,16 @@ namespace Entities.Player.States
 {
     public class BarredState : PlayerBaseState
     {
-        public Vector3 BottomTangent { get; private set; } = Vector3.forward;
-        public float FacingSign { get; private set; } = 1f;
-        public float EntryAngle { get; private set; }
-        public float EntryAngularVelocity { get; private set; }
+        /// <summary>True when the player grabbed the bar from above (walks on it). False when from the side or below (swings).</summary>
+        public bool EntryFromAbove { get; private set; }
+
+        private readonly Probe _ground;
 
         public BarredState(PlayerStateMachine currentContext, PlayerStateFactory stateFactory) : base(currentContext, stateFactory)
         {
             StateKey = PlayerStates.Barred;
+
+            _ground = currentContext.CreateGroundProbe(0.8f, 0.5f);
         }
 
         public override void EnterState(EntityBaseState previousState = null)
@@ -22,61 +24,63 @@ namespace Entities.Player.States
             if (Ctx.DoDebug) Debug.Log($"Entered {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. From {previousState?.StateKey.ToString() ?? "null"}");
 
             if (!TryResolveBarAnchor(out Vector3 pivot, out Vector3 axis))
+            {
+                if (Ctx.DoDebug) Debug.LogWarning("BarredState: no bar found, bailing out.");
+                if (Factory.HasState(PlayerStates.Airborne)) TrySwitchState(PlayerStates.Airborne);
+                else if (Factory.HasState(PlayerStates.Grounded)) TrySwitchState(PlayerStates.Grounded);
                 return;
+            }
+
+            Ctx.Ground = _ground;
 
             Ctx.BarPivot = pivot;
             Ctx.BarAxis = axis;
 
-            float length = Mathf.Max(0.5f, Ctx.PlayerContext.SwingLength);
-
-            Vector3 radial = Ctx.Rigidbody.position - pivot;
-            if (radial.sqrMagnitude < 0.0001f) radial = Vector3.down;
-            radial.Normalize();
-
-            // Capture pre-grab velocity for swing entry momentum.
-            Vector3 entryVelocity = Ctx.Rigidbody.linearVelocity;
-
-            Vector3 tangent = Vector3.Cross(axis, radial).normalized;
-            BottomTangent = Vector3.Cross(axis, Vector3.down).normalized;
-            if (BottomTangent.sqrMagnitude < 0.0001f)
-                BottomTangent = Vector3.forward;
-
-            EntryAngle = Vector3.SignedAngle(Vector3.down, radial, axis) * Mathf.Deg2Rad;
-
-            float entryTangentialSpeed = Vector3.Dot(entryVelocity, tangent);
-            EntryAngularVelocity = entryTangentialSpeed / length;
-
-            Vector3 entryFwd = Vector3.ProjectOnPlane(Ctx.PlayerModel.forward, Vector3.up);
-            if (entryFwd.sqrMagnitude < 0.0001f)
-                entryFwd = Vector3.ProjectOnPlane(entryVelocity, Vector3.up);
-
-            if (entryFwd.sqrMagnitude < 0.0001f)
-                entryFwd = BottomTangent;
-
-            FacingSign = Vector3.Dot(entryFwd, BottomTangent) >= 0f ? 1f : -1f;
-
-            Ctx.Rigidbody.useGravity = false;
-            Ctx.Rigidbody.linearVelocity = Vector3.zero;
-            Ctx.Rigidbody.position = pivot + (radial * length);
+            Vector3 playerToBar = (pivot - Ctx.Rigidbody.position).normalized;
+            float entryAngle = Vector3.Angle(Vector3.up, -playerToBar);
+            EntryFromAbove = entryAngle <= Ctx.PlayerContext.BarTopEntryAngle;
         }
 
         public override void ExitState(EntityBaseState nextState = null)
         {
             if (Ctx.DoDebug) Debug.Log($"Exited {StateKey} with super state: {CurrentSuperState?.StateKey.ToString() ?? "null"}. To {nextState?.StateKey.ToString() ?? "null"}");
+
+            Ctx.CurrentBar           = null;
+            Ctx.CurrentBarAttachment = null;
+            Ctx.BarPivot             = Vector3.zero;
+            Ctx.BarAxis              = Vector3.right;
         }
 
         public override void InitializeSubState()
         {
+            if (EntryFromAbove)
+            {
+                if (Factory.HasState(PlayerStates.Balancing))
+                {
+                    if (TrySwitchSubState(PlayerStates.Balancing))
+                        return;
+                }
+            }
+            else
+            {
+                if (Factory.HasState(PlayerStates.Swinging))
+                {
+                    if (TrySwitchSubState(PlayerStates.Swinging))
+                        return;
+                }
+            }
+
+            if (Factory.HasState(PlayerStates.Balancing))
+            {
+                if (TrySwitchSubState(PlayerStates.Balancing))
+                    return;
+            }
+
             if (Factory.HasState(PlayerStates.Swinging))
             {
                 if (TrySwitchSubState(PlayerStates.Swinging))
                     return;
             }
-        }
-
-        public override void CheckSwitchState()
-        {
-
         }
 
         private bool TryResolveBarAnchor(out Vector3 pivot, out Vector3 axis)
@@ -119,10 +123,32 @@ namespace Entities.Player.States
                 }
             }
 
+            if (bestCollider == null)
+            {
+                pivot = default;
+                axis = default;
+                return false;
+            }
+
+            Ctx.CurrentBar = bestCollider.gameObject;
+
             pivot = closest;
-            axis = bestCollider != null ? bestCollider.transform.right : Ctx.PlayerModel.right;
+            axis = bestCollider.transform.right;
             if (axis.sqrMagnitude < 0.0001f) axis = Vector3.right;
             axis.Normalize();
+
+            // If the bar has a BarAttachment, use it for precise centerline pivot and axis.
+            BarAttachment attachment = bestCollider != null
+                ? bestCollider.GetComponent<BarAttachment>()
+                : null;
+
+            Ctx.CurrentBarAttachment = attachment;
+
+            if (attachment != null)
+            {
+                pivot = attachment.GetClosestPointOnAxis(reference);
+                axis = attachment.Axis;
+            }
 
             return true;
         }

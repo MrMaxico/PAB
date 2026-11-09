@@ -23,7 +23,7 @@ namespace Entities.Player.States
                 currentContext.CreateWallSphere(Vector3.forward, 0.7f, 0.3f),
                 currentContext.CreateWallRay(Vector3.right, 0.7f).When(() => Factory.HasState(PlayerStates.WallWalking)),
                 currentContext.CreateWallRay(Vector3.left, 0.7f).When(() => Factory.HasState(PlayerStates.WallWalking)));
-            _bar = currentContext.CreateBarProbe(Vector3.up, 0f, 3f).Named("Jumping_Bar");
+            _bar = currentContext.CreateBarSphere(3f).Named("Jumping_Bar");
         }
 
         public override void EnterState(EntityBaseState previousState)

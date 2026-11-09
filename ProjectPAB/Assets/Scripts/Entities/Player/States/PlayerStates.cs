@@ -25,7 +25,9 @@ namespace Entities.Player.States
         public static readonly StateKey WallClinging = new("WallClinging");
         public static readonly StateKey WallLunging = new("WallLunging");
         public static readonly StateKey LedgeHanging = new("LedgeHanging");
+
         public static readonly StateKey Swinging = new("Swinging");
+        public static readonly StateKey Balancing = new("Balancing");
 
         // Camera Context States
         public static readonly StateKey ThirdPersonCamera = new("ThirdPersonCamera");

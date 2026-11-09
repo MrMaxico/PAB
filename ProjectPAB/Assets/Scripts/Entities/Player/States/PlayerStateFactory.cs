@@ -24,7 +24,7 @@ namespace Entities.Player.States
             RegisterState(PlayerStates.Falling, new FallingState(context, this));
 
             RegisterState(PlayerStates.Swinging, new SwingingState(context, this));
-
+            RegisterState(PlayerStates.Balancing, new BalancingState(context, this));
 
             // --- Climbing/Wall States ---
             RegisterState(PlayerStates.Climbing, new ClimbingState(context, this));

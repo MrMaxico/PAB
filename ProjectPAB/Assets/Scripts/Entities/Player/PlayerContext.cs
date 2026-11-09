@@ -75,17 +75,27 @@ namespace Entities.Player
         [SerializeField] private float _groundJumpGrace = 0.3f;
         public float GroundJumpGrace => _groundJumpGrace;
 
+        [SerializeField] private float _groundBarGrace = 0.3f;
+        public float GroundBarGrace => _groundBarGrace;
+
         [SerializeField] private float _wallJumpGrace = 0.1f;
         public float WallJumpGrace => _wallJumpGrace;
 
         [SerializeField] private float _railJumpGrace = 0.3f;
         public float RailJumpGrace => _railJumpGrace;
 
-        [SerializeField] private float _barJumpGrace = 0.3f;
+        [SerializeField] private float _barJumpGrace = 0.7f;
         public float BarJumpGrace => _barJumpGrace;
 
-        [SerializeField] private float _sameBarJumpGrace = 0.8f;
-        public float SameBarJumpGrace => _sameBarJumpGrace;
+        [SerializeField] private float _barAirGrace = 0.7f;
+        public float BarAirborneGrace => _barAirGrace;
+
+        [SerializeField] private float _barGroundedGrace = 0.3f;
+        public float BarGroundedGrace => _barGroundedGrace;
+
+        [Tooltip("Maximum angle (degrees) between the player-to-bar vector and Vector3.up that still counts as grabbing from above. 0 = must be directly above; 90 = side entry also counts.")]
+        [SerializeField][Range(0f, 90f)] private float _barTopEntryAngle = 60f;
+        public float BarTopEntryAngle => _barTopEntryAngle;
 
 
         [Header("Camera")]

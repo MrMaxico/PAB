@@ -1,8 +1,5 @@
-using Entities.Base.Detection;
-using Entities.Base.States;
 using Entities.Base.States.Base;
 using Entities.Player.States.Base;
-using Systems.Input;
 using UnityEngine;
 
 namespace Entities.Player.States
